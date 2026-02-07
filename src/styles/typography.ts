@@ -1,4 +1,4 @@
-export const typograohy = {
+export const typography = {
     fontFamily: 'Inter, system-ui, sans-serif',
 
     xs: '12px',
