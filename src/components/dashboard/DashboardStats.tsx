@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card/card"
-import { StatsGrid } from "./DashboardStats.styles"
+import { dashboardStatsStyles } from "./DashboardStats.styles"
 import { DashboardStat } from "./DashboardStats.types"
 
 const stats: DashboardStat[] = [
@@ -25,7 +25,7 @@ const stats: DashboardStat[] = [
 
 export default function DashboardStats() {
   return (
-    <StatsGrid>
+    <div style={dashboardStatsStyles.grid}>
       {stats.map((stat) => (
         <Card key={stat.title}>
           <h4>{stat.title}</h4>
@@ -33,6 +33,6 @@ export default function DashboardStats() {
           <span>{stat.change}</span>
         </Card>
       ))}
-    </StatsGrid>
+    </div>
   )
 }
