@@ -4,6 +4,7 @@ import { Colors } from '@/styles/colors';
 import { spacing } from '@/styles/spacing';
 import { radius } from '@/styles/radius';
 import { shadows } from '@/styles/shadows';
+import { theme } from '@/styles/theme';
 
 export const cardStyles = {
   base: {
@@ -24,4 +25,11 @@ export const cardStyles = {
       padding: spacing.lg,
     },
   },
+  container: {
+    background: theme.colors.Surface,
+    border: `1px solid ${theme.colors.border}`,
+    borderRadius: theme.radius.md,
+    boxShadow: theme.shadows.sm,
+    padding: theme.spacing.lg,
+  }
 };

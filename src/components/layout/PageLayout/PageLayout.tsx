@@ -1,47 +1,22 @@
-import React from 'react'
-import { Sidebar } from '../sidebar/Sidebar'
-import Header from '../header/Header'
+import Sidebar from "@/components/layout/sidebar/Sidebar";
+import Header from "@/components/layout/header/Header";
 
-type PageLayoutProps = {
-  children: React.ReactNode
-}
-
-export default function PageLayout({ children }: PageLayoutProps) {
+export default function PageLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <div style={layoutStyles.container}>
+    <div style={{ display: "flex", minHeight: "100vh" }}>
       <Sidebar />
 
-      <div style={layoutStyles.mainArea}>
+      <div style={{ flex: 1 }}>
         <Header title="Audit Insight" />
 
-        <main style={layoutStyles.content}>
+        <main style={{ padding: "24px" }}>
           {children}
         </main>
-
       </div>
     </div>
-  )
-}
-
-const layoutStyles: {
-  container: React.CSSProperties;
-  mainArea: React.CSSProperties;
-  content: React.CSSProperties;
-} = {
-  container: {
-    display: 'flex',
-    height: '100vh',
-  },
-
-  mainArea: {
-    flex: 1,
-    display: 'flex',
-    flexDirection: 'column',
-  },
-
-  content: {
-    padding: '24px',
-    background: '#F3F5FA',
-    flex: 1,
-  }
+  );
 }
