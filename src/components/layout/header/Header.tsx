@@ -1,18 +1,53 @@
-import React from 'react';
-import { headerStyles } from './header.styles';
-import { HeaderProps } from './header.types';
+import { headerStyles } from "./header.styles"
 
-const Header = ({ title }: HeaderProps) => {
+export interface HeaderProps {
+  title: string
+}
+
+const navItems = [
+  "Dashboard",
+  "Transactions",
+  "Evidence",
+  "Review Queue",
+  "Reports",
+  "Settings",
+]
+
+export default function Header({ title }: HeaderProps) {
   return (
-    <div style={headerStyles.container}>
-      <h1 style={headerStyles.title}>{title}</h1>
+    <header style={headerStyles.container}>
+      <div style={headerStyles.left}>
+        <div style={headerStyles.logo}>
+          <div style={headerStyles.logoMark} />
+          {title}   {/* ⭐ use the prop here */}
+        </div>
 
-      <div style={headerStyles.rightSection}>
-        <span>🔔</span>
-        <span>👤</span>
+        <nav style={headerStyles.nav}>
+          {navItems.map((item, index) => (
+            <div
+              key={item}
+              style={{
+                ...headerStyles.navItem,
+                ...(index === 0 ? headerStyles.navItemActive : {}),
+              }}
+            >
+              {item}
+
+              {index === 0 && (
+                <div style={headerStyles.activeUnderline} />
+              )}
+            </div>
+          ))}
+        </nav>
       </div>
-    </div>
-  );
-};
 
-export default Header
+      <div style={headerStyles.right}>
+        <span style={headerStyles.welcome}>Welcome, Diana</span>
+
+        <div style={headerStyles.avatar}>
+          <div style={headerStyles.badge}>6</div>
+        </div>
+      </div>
+    </header>
+  )
+}
