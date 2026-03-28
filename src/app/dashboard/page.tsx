@@ -8,6 +8,7 @@ import { dashboardLayoutStyles } from "./DashboardPage.styles";
 export default function DashboardPage() {
   return (
     <div style={dashboardLayoutStyles.page}>
+      
       {/* ⭐ PAGE TOOLBAR */}
       <PageToolbar
         title="Dashboard"
@@ -30,5 +31,4 @@ export default function DashboardPage() {
       </div>
     </div>
   );
-  
 }
