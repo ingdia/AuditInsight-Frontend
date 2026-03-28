@@ -1,6 +1,8 @@
 import { Table } from "@/components/ui/table/table";
-import { Badge } from "@/components/ui/badge/badge";
 import { Card } from "@/components/ui/card/card";
+import { CardHeader } from "@/components/ui/cardHeader/CardHeader";
+import { CardContent } from "@/components/ui/cardHeader/CardContent";
+import { Badge } from "@/components/ui/badge/badge";
 
 type HighRiskRow = {
   id: string;
@@ -10,7 +12,7 @@ type HighRiskRow = {
   status: "Observed" | "Flagged" | "Reviewed" | "Approved";
 };
 
-// Fake demo data — this is an **array** of objects.
+// Demo data
 const highRiskData: HighRiskRow[] = [
   {
     id: "#TXN10451",
@@ -35,23 +37,52 @@ const highRiskData: HighRiskRow[] = [
   },
 ];
 
+// ✅ NEW: use variant instead of color
+const statusVariant: Record<
+  HighRiskRow["status"],
+  "success" | "warning" | "danger"
+> = {
+  Observed: "warning",
+  Flagged: "danger",
+  Reviewed: "success",
+  Approved: "success",
+};
+
 export default function HighRiskTransactions() {
-  // Columns tells the Table what to show on each column
-  const columns: { header: string; accessor: keyof HighRiskRow }[] = [
+  const columns: {
+    header: string;
+    accessor: keyof HighRiskRow;
+    cell?: (value: string | number) => React.ReactNode;
+  }[] = [
     { header: "ID", accessor: "id" },
     { header: "Date", accessor: "date" },
     { header: "Counterparty", accessor: "counterparty" },
     { header: "Risk Score", accessor: "riskScore" },
+
     {
       header: "Status",
       accessor: "status",
+
+      // ✅ FIXED CELL FUNCTION
+      cell: (value: string | number) => {
+        const status = value as HighRiskRow["status"];
+
+        return (
+          <Badge
+            label={status}
+            variant={statusVariant[status]}
+          />
+        );
+      },
     },
   ];
 
   return (
-    <Card>
-      <h3>High‑Risk Transactions</h3>
-      <Table columns={columns} data={highRiskData} />
+    <Card padding="lg">
+      <CardHeader title="High-Risk Transactions" />
+      <CardContent>
+        <Table columns={columns} data={highRiskData} />
+      </CardContent>
     </Card>
   );
 }

@@ -1,10 +1,9 @@
-import DashboardStats from "@/components/dashboard/DashboardStats"
-import EvidenceChart from "@/components/dashboard/EvidenceChart"
-import HighRiskTransactions from "@/components/dashboard/HighRiskTransactions"
-import ComplianceAlerts from "@/components/dashboard/ComplianceAlerts"
-import PageToolbar from "@/components/layout/pageToolbar/pageToolbar"
-
-import { dashboardLayoutStyles } from "./DashboardPage.styles"
+import DashboardStats from "@/components/dashboard/DashboardStats";
+import EvidenceChart from "@/components/dashboard/EvidenceChart";
+import HighRiskTransactions from "@/components/dashboard/HighRiskTransactions";
+import ComplianceAlerts from "@/components/dashboard/ComplianceAlerts";
+import PageToolbar from "@/components/layout/pageToolbar/pageToolbar";
+import { dashboardLayoutStyles } from "./DashboardPage.styles";
 
 export default function DashboardPage() {
   return (
@@ -30,7 +29,6 @@ export default function DashboardPage() {
         <HighRiskTransactions />
         <ComplianceAlerts />
       </div>
-
     </div>
-  )
+  );
 }
