@@ -2,18 +2,59 @@
 
 import { useState } from "react";
 import { Input } from "@/components/ui/input/input";
-import { Colors } from "@/styles/colors"; // 👈 import your colors
+import { Colors } from "@/styles/colors";
 import Link from "next/dist/client/link";
+import { useRouter } from "next/navigation"; // ✅ ADD THIS
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  const router = useRouter(); // ✅ ADD THIS
+
+  // ✅ ADD THIS FUNCTION
+  const handleLogin = async () => {
+    try {
+      const res = await fetch("http://localhost:8080/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      console.log("Response status:", res.status);
+
+      let data;
+      try {
+        data = await res.json();
+      } catch {
+        data = { message: "No response body" };
+      }
+
+      console.log("Response data:", data);
+
+      if (!res.ok) {
+        alert(data.message || "Login failed");
+        return;
+      }
+
+      // ✅ Save token
+      localStorage.setItem("token", data.token);
+
+      // 🚀 NO ALERT → instant redirect
+      router.replace("/dashboard");  
+    } catch (error) {
+      console.error("Login error:", error);
+      alert("Something went wrong");
+    }
+  };
+
   return (
     <div
       style={{
         height: "100vh",
-        background: Colors.appBackground, // ✅ from your system
+        background: Colors.appBackground,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -27,13 +68,13 @@ export default function LoginPage() {
           overflow: "hidden",
           background: Colors.Surface,
           boxShadow: "0 25px 70px rgba(0,0,0,0.12)",
-          border: `1px solid ${Colors.border}`, // ✅ subtle polish
+          border: `1px solid ${Colors.border}`,
         }}
       >
         {/* HEADER */}
         <div
           style={{
-            background: Colors.gradientHeader, // ✅ your gradient
+            background: Colors.gradientHeader,
             padding: "22px",
             textAlign: "center",
           }}
@@ -67,7 +108,7 @@ export default function LoginPage() {
           {/* FORM BOX */}
           <div
             style={{
-              background: Colors.appBackground, // softer than pure white
+              background: Colors.appBackground,
               padding: "24px",
               borderRadius: "12px",
               border: `1px solid ${Colors.divider}`,
@@ -111,12 +152,13 @@ export default function LoginPage() {
             {/* BUTTON */}
             <div style={{ marginTop: "22px" }}>
               <button
+                onClick={handleLogin} // ✅ ADD THIS ONLY
                 style={{
                   width: "100%",
                   padding: "13px",
                   borderRadius: "8px",
                   border: "none",
-                  background: Colors.primaryDark, // ✅ consistent branding
+                  background: Colors.primaryDark,
                   color: "#fff",
                   fontWeight: 600,
                   fontSize: "15px",

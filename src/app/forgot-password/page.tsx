@@ -10,6 +10,39 @@ export default function ForgotPasswordPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
 
+  // ✅ ADDED: handleForgotPassword function
+  const handleForgotPassword = async () => {
+    try {
+      const res = await fetch("http://localhost:8080/api/auth/forgot-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await res.text();
+
+      if (!res.ok) {
+        throw new Error(data);
+      }
+
+      alert("OTP sent to your email ✅");
+
+      // 👉 move to reset page AFTER success
+      router.push(`/reset-password?email=${email}`);
+
+    } catch (err: unknown) {
+      let message = "Something went wrong ❌";
+      if (err instanceof Error) {
+        message = err.message;
+      } else if (typeof err === "string") {
+        message = err;
+      }
+      alert(message);
+    }
+  };
+
   return (
     <div
       style={{
@@ -98,7 +131,7 @@ export default function ForgotPasswordPage() {
             {/* BUTTON */}
             <div style={{ marginTop: "22px" }}>
               <button
-                onClick={() => router.push("/reset-password")}
+                onClick={handleForgotPassword}
                 style={{
                   width: "100%",
                   padding: "13px",
