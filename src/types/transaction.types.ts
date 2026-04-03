@@ -1,21 +1,22 @@
 export type TransactionStatus =
-    | "new"
-    | "reviewed"
-    | "Flagged"
-    | "Overdue";
+  | "New"
+  | "Reviewed"
+  | "Flagged"
+  | "Overdue";
 
-    export interface Transaction {
-        id: string;    // TXN10651
-        date: string;
-        amount: number;
-        counterparty: string;
-        source: "Bank" | "Exccel";
+export interface Transaction {
+  id: string;              // TXN10651
+  date: string;
+  amount: number;
+  counterparty: string;
+  source: "Bank" | "Excel";
 
-        //core audit fields
-        evidanceCoverage: number; // 0-100
-        risckScore: number; // 0-100
-        status: TransactionStatus;
+  // 🔥 CORE AUDIT FIELDS
+  evidenceCoverage: number;  // 0–100%
+  riskScore: number;         // 0–100%
 
-        //relation
-        evidanceIds: string[];  // links to documments
-    }
+  status: TransactionStatus;
+
+  // 🔗 RELATION
+  evidenceIds: string[];     // links to documents
+}
