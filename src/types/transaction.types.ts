@@ -1,25 +1,22 @@
-// A type is like a blueprint
-//it tells the system what a transaction must look like
+export type TransactionStatus =
+  | "New"
+  | "Reviewed"
+  | "Flagged"
+  | "Overdue";
 
-export type TransactionStatus = 
-| "New"
-| "Flagged"
-| "Reviewed"
-| "Overdue"
-|"Missing";
+export interface Transaction {
+  id: string;              // TXN10651
+  date: string;
+  amount: number;
+  counterparty: string;
+  source: "Bank" | "Excel";
 
-    // This is the main Transasction structure
-    export interface Transaction{
-    id: string;  // "TXN10561"
-    date: string;   //"TXN10561"
-    amount: number;   // 15000
-    counterparty: string;  // "XYZ Corp"
-    source: "Bank" | "Excel";  //ONLY these values allowed
+  // 🔥 CORE AUDIT FIELDS
+  evidenceCoverage: number;  // 0–100%
+  riskScore: number;         // 0–100%
 
+  status: TransactionStatus;
 
-    evidence: number;   // % (0 - 100)
-    riskScore: number;  //  % (0 - 100)
-
-    status: TransactionStatus;  // "New" | "Flagged" | "Reviewed" | "Overdue" | "Missing"
-    }
-
+  // 🔗 RELATION
+  evidenceIds: string[];     // links to documents
+}

@@ -15,6 +15,7 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   // ✅ Handle signup API call
+
   const handleSignup = async () => {
     if (password !== confirmPassword) {
       alert("Passwords do not match");
@@ -32,9 +33,9 @@ export default function SignupPage() {
 
       let data;
       try {
-        data = await res.json(); // ✅ safe parsing
+        data = await res.json();
       } catch {
-        data = { message: "No response body" }; // ✅ fallback
+        data = { message: "No response body" };
       }
 
       console.log("Response data:", data);
@@ -44,8 +45,8 @@ export default function SignupPage() {
         return;
       }
 
-      alert(data.message);
-      router.push("/verify-otp");
+      // ✅ NO OTP → go to login
+      router.replace("/log-in");
     } catch (error) {
       console.error("Fetch error:", error);
       alert("Something went wrong");
