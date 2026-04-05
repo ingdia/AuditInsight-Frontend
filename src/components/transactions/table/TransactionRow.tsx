@@ -5,14 +5,16 @@ import { EvidenceList } from "../EvidenceList";
 interface TransactionRowProps {
   transaction: Transaction;
   evidences: Evidence[];
+  onClick: () => void;
 }
 
 export const TransactionRow = ({
   transaction,
   evidences,
+  onClick,
 }: TransactionRowProps) => {
   return (
-    <tr>
+    <tr onClick={onClick} style={{ cursor: "pointer" }}>
       <td>{transaction.counterparty}</td>
       <td>{transaction.amount}</td>
       <td>{transaction.status}</td>
