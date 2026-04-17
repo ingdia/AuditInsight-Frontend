@@ -19,7 +19,7 @@ export const EvidenceTable = ({ data }: Props) => {
 
   const [isOpen, setIsOpen] = useState(false);
 
-  const handleOpen = (id: string) => {
+  const handleOpen = (id: number) => {
     const txn =
       transactionsData.find((t) => t.id === id) || null;
 

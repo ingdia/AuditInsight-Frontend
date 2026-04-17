@@ -8,7 +8,7 @@ import { theme } from "@/styles/theme"; // ✅ ADDED
 
 interface Props {
   evidence: Evidence;
-  onOpenTransaction: (id: string) => void;
+  onOpenTransaction: (id: number) => void;
 }
 
 export const EvidenceRow = ({ evidence, onOpenTransaction }: Props) => {
