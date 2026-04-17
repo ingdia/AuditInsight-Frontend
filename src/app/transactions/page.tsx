@@ -89,27 +89,31 @@ export default function TransactionsPage() {
 
   /* 🚀 CREATE TRANSACTION (FIXED) */
   const handleCreateTransaction = async (data: Omit<Transaction, "id">) => {
-  try {
-    const res = await createTransaction(data);
+    try {
+      const payload = {
+        ...data,
+        date: data.date, // keeps it explicit (safe for backend)
+      };
 
-    const newTransaction: Transaction = {
-      id: res.data.id ?? Date.now(),
-      date: res.data.date,
-      amount: res.data.amount,
-      counterparty: res.data.counterparty,
-      type: res.data.type,
-      source: res.data.source,
-      status: res.data.status,
-      riskScore: res.data.riskScore,
-    };
+      const res = await createTransaction(payload);
 
-    setTransactions((prev) => [newTransaction, ...prev]);
-    setIsAddModalOpen(false);
-  } catch (error) {
-    console.error("Failed to create transaction:", error);
-  }
-};
+      const newTransaction: Transaction = {
+        id: res.data.id ?? Date.now(),
+        date: res.data.date,
+        amount: res.data.amount,
+        counterparty: res.data.counterparty,
+        type: res.data.type,
+        source: res.data.source,
+        status: res.data.status,
+        riskScore: res.data.riskScore,
+      };
 
+      setTransactions((prev) => [newTransaction, ...prev]);
+      setIsAddModalOpen(false);
+    } catch (error) {
+      console.error("Failed to create transaction:", error);
+    }
+  };
   const handleOpen = (transaction: Transaction) => {
     setSelectedTransaction(transaction);
     setIsOpen(true);
