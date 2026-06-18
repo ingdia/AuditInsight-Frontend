@@ -7,8 +7,8 @@ import { Eye, Pencil, Trash2 } from "lucide-react";
 interface Props {
   transaction: Transaction;
   onView: (transaction: Transaction) => void;
-  onEdit: (transaction: Transaction) => void;
-  onDelete: (transaction: Transaction) => void;
+  onEdit?: (transaction: Transaction) => void;
+  onDelete?: (transaction: Transaction) => void;
 }
 
 export function TransactionActions({
@@ -32,16 +32,16 @@ export function TransactionActions({
       <button
         type="button"
         title="Edit"
-        style={btn}
-        onClick={() => onEdit(transaction)}
+        style={{ ...btn, display: onEdit ? "flex" : "none" }}
+        onClick={() => onEdit?.(transaction)}
       >
         <Pencil size={16} />
       </button>
       <button
         type="button"
         title="Delete"
-        style={{ ...btn, color: theme.colors.danger }}
-        onClick={() => onDelete(transaction)}
+        style={{ ...btn, color: theme.colors.danger, display: onDelete ? "flex" : "none" }}
+        onClick={() => onDelete?.(transaction)}
       >
         <Trash2 size={16} />
       </button>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, Suspense } from "react";
+import { useState, useMemo, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 
 import { TransactionsStats } from "@/components/transactions/TransactionsStats";
@@ -13,180 +13,78 @@ import PageToolbar from "@/components/layout/pageToolbar/pageToolbar";
 
 import { theme } from "@/styles/theme";
 import { Transaction } from "@/types/transaction.types";
-import { Evidence } from "@/types/evidence.types";
-import {
-  createTransaction,
-  deleteTransaction,
-  getEvidence,
-  getTransactions,
-  updateTransaction,
-} from "@/utils/api";
+import { useTransactions } from "@/hooks/useTransactions";
+import { usePermissions } from "@/security/access-control";
 
 function TransactionsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-
   const transactionId = searchParams.get("transactionId");
 
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [evidences, setEvidences] = useState<Evidence[]>([]);
+  /*
+   * ── REAL API (commented for RBAC UI testing) ──────────────────
+   * Data was previously fetched via getTransactions() / getEvidence()
+   * directly in this page. Now managed by useTransactions hook.
+   * ──────────────────────────────────────────────────────────────
+   */
+  const { transactions, evidences, addTransaction, updateTransaction, deleteTransaction } = useTransactions();
+  const { canAddTransaction, canEditTransaction, canDeleteTransaction } = usePermissions();
+
   const [search, setSearch] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [page, setPage] = useState(1);
-
-  const [selectedTransaction, setSelectedTransaction] =
-    useState<Transaction | null>(null);
-
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [editingTransaction, setEditingTransaction] =
-    useState<Transaction | null>(null);
-  const [transactionToDelete, setTransactionToDelete] =
-    useState<Transaction | null>(null);
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const pageSize = 25;
 
-  /* =========================
-     LOAD DATA
-  ========================= */
-  const reloadData = async () => {
-    try {
-      const [txRes, evRes] = await Promise.all([
-        getTransactions(),
-        getEvidence(),
-      ]);
-      setTransactions(txRes.data);
-      setEvidences(evRes.data);
-    } catch (error) {
-      console.error("Failed to load transactions:", error);
-    }
-  };
-
-  useEffect(() => {
-    reloadData();
-  }, []);
-
-  /* =========================
-     DERIVED: selected transaction
-  ========================= */
-  const selectedFromUrl = useMemo(() => {
+  const selectedTransaction = useMemo(() => {
     if (!transactionId || transactions.length === 0) return null;
-
-    return (
-      transactions.find((t) => t.id === Number(transactionId)) || null
-    );
+    return transactions.find((t) => String(t.id) === transactionId) ?? null;
   }, [transactionId, transactions]);
 
-  const isOpen = !!selectedFromUrl;
-
-  useEffect(() => {
-    setSelectedTransaction(selectedFromUrl);
-  }, [selectedFromUrl]);
-
-  /* =========================
-     FILTERING
-  ========================= */
   const filteredData = useMemo(() => {
     return transactions.filter((t) => {
-      if (
-        search &&
-        !(t.counterparty ?? t.name ?? "").toLowerCase().includes(search.toLowerCase())
-      )
-        return false;
-
+      if (search && !(t.counterparty ?? t.name ?? "").toLowerCase().includes(search.toLowerCase())) return false;
       if (startDate && new Date(t.date) < new Date(startDate)) return false;
       if (endDate && new Date(t.date) > new Date(endDate)) return false;
-
       return true;
     });
   }, [transactions, search, startDate, endDate]);
 
   const totalPages = Math.ceil(filteredData.length / pageSize);
-
-  const paginatedData = filteredData.slice(
-    (page - 1) * pageSize,
-    page * pageSize
-  );
-
-  /* =========================
-     ACTIONS
-  ========================= */
-  const handleOpen = (transaction: Transaction) => {
-    router.push(`/transactions?transactionId=${transaction.id}`);
-  };
+  const paginatedData = filteredData.slice((page - 1) * pageSize, page * pageSize);
 
   const handleCloseModal = () => {
     router.replace("/transactions");
-    setSelectedTransaction(null);
   };
 
   const handleCreateTransaction = async (data: Omit<Transaction, "id">) => {
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await createTransaction(data as any);
-      await reloadData();
-      setIsAddModalOpen(false);
-    } catch (error) {
-      console.error("Failed to create transaction:", error);
-    }
+    await addTransaction(data);
+    setIsAddModalOpen(false);
   };
 
   const handleUpdateTransaction = async (data: Omit<Transaction, "id">) => {
     if (!editingTransaction) return;
-
-    try {
-      await updateTransaction(editingTransaction.id, data);
-      await reloadData();
-      setEditingTransaction(null);
-    } catch (error) {
-      console.error("Failed to update transaction:", error);
-    }
-  };
-
-  const handleDeleteTransaction = (transaction: Transaction) => {
-    setTransactionToDelete(transaction);
+    await updateTransaction(editingTransaction.id, data);
+    setEditingTransaction(null);
   };
 
   const handleConfirmDelete = async () => {
     if (!transactionToDelete) return;
-
     setIsDeleting(true);
-    try {
-      await deleteTransaction(transactionToDelete.id);
-      if (transactionId === String(transactionToDelete.id)) {
-        handleCloseModal();
-      }
-      setTransactionToDelete(null);
-      await reloadData();
-    } catch (error) {
-      console.error("Failed to delete transaction:", error);
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  const handleEdit = (transaction: Transaction) => {
-    setEditingTransaction(transaction);
-  };
-
-  const handleReset = () => {
-    setSearch("");
-    setStartDate("");
-    setEndDate("");
-    setPage(1);
+    await deleteTransaction(transactionToDelete.id);
+    if (transactionId === String(transactionToDelete.id)) handleCloseModal();
+    setTransactionToDelete(null);
+    setIsDeleting(false);
   };
 
   const handleExport = () => {
-    const csv = filteredData.map(
-      (t) =>
-        `${t.id},${t.date},${t.amount},${t.counterparty},${t.status}`
-    );
-
-    const blob = new Blob([csv.join("\n")], {
-      type: "text/csv",
-    });
-
+    const csv = filteredData.map((t) => `${t.id},${t.date},${t.amount},${t.counterparty},${t.status}`);
+    const blob = new Blob([csv.join("\n")], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -194,98 +92,82 @@ function TransactionsContent() {
     a.click();
   };
 
-  /* =========================
-     UI
-  ========================= */
   return (
     <div style={pageStyles}>
-      <TransactionsStats
-        transactions={transactions}
-        evidences={evidences}
-      />
+      <TransactionsStats transactions={transactions} evidences={evidences} />
 
       <section style={section}>
         <PageToolbar
           title="Transactions"
           showSearch
-          primaryActionLabel="Add Transaction"
+          // ── Role guard: only MEMBER sees "Add Transaction" button ──
+          primaryActionLabel={canAddTransaction ? "Add Transaction" : undefined}
           search={search}
           setSearch={setSearch}
           startDate={startDate}
           endDate={endDate}
           setStartDate={setStartDate}
           setEndDate={setEndDate}
-          onReset={handleReset}
+          onReset={() => { setSearch(""); setStartDate(""); setEndDate(""); setPage(1); }}
           onExport={handleExport}
-          onAdd={() => setIsAddModalOpen(true)}
+          onAdd={canAddTransaction ? () => setIsAddModalOpen(true) : undefined}
         />
 
         <TransactionsTable
           data={paginatedData}
           evidences={evidences}
-          onRowClick={handleOpen}
-          onEdit={handleEdit}
-          onDelete={handleDeleteTransaction}
-          highlightId={
-            transactionId ? Number(transactionId) : undefined
-          }
+          onRowClick={(t) => router.push(`/transactions?transactionId=${t.id}`)}
+          // ── Role guards: edit/delete only for MEMBER ──
+          onEdit={canEditTransaction ? (t) => setEditingTransaction(t) : undefined}
+          onDelete={canDeleteTransaction ? (t) => setTransactionToDelete(t) : undefined}
+          highlightId={transactionId ? Number(transactionId) : undefined}
         />
 
         <div style={footer}>
           <span>
-            Showing{" "}
-            {filteredData.length === 0
-              ? 0
-              : (page - 1) * pageSize + 1}
-            –
-            {Math.min(page * pageSize, filteredData.length)} of{" "}
-            {filteredData.length.toLocaleString()} transactions
+            Showing {filteredData.length === 0 ? 0 : (page - 1) * pageSize + 1}–
+            {Math.min(page * pageSize, filteredData.length)} of {filteredData.length.toLocaleString()} transactions
           </span>
-
-          <TransactionsPagination
-            page={page}
-            setPage={setPage}
-            totalPages={totalPages}
-          />
+          <TransactionsPagination page={page} setPage={setPage} totalPages={totalPages} />
         </div>
       </section>
 
       <TransactionDetailsModal
-  isOpen={isOpen}
-  onClose={handleCloseModal}
-  transaction={selectedTransaction}
-  evidences={
-    selectedTransaction
-      ? evidences.filter(
-          (e) =>
-            Number(e.transactionId) === Number(selectedTransaction.id)
-        )
-      : []
-  }
-/>
-
-      <AddTransactionModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        onSubmit={handleCreateTransaction}
-        mode="add"
+        isOpen={!!selectedTransaction}
+        onClose={handleCloseModal}
+        transaction={selectedTransaction}
+        evidences={selectedTransaction ? evidences.filter((e) => Number(e.transactionId) === Number(selectedTransaction.id)) : []}
       />
 
-      <AddTransactionModal
-        isOpen={!!editingTransaction}
-        onClose={() => setEditingTransaction(null)}
-        onSubmit={handleUpdateTransaction}
-        transaction={editingTransaction}
-        mode="edit"
-      />
+      {/* ── Only render modals if role permits ── */}
+      {canAddTransaction && (
+        <AddTransactionModal
+          isOpen={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)}
+          onSubmit={handleCreateTransaction}
+          mode="add"
+        />
+      )}
 
-      <ConfirmDeleteModal
-        isOpen={!!transactionToDelete}
-        transaction={transactionToDelete}
-        onClose={() => setTransactionToDelete(null)}
-        onConfirm={handleConfirmDelete}
-        isDeleting={isDeleting}
-      />
+      {canEditTransaction && (
+        <AddTransactionModal
+          isOpen={!!editingTransaction}
+          onClose={() => setEditingTransaction(null)}
+          onSubmit={handleUpdateTransaction}
+          transaction={editingTransaction}
+          mode="edit"
+        />
+      )}
+
+      {canDeleteTransaction && (
+        <ConfirmDeleteModal
+          isOpen={!!transactionToDelete}
+          transaction={transactionToDelete}
+          onClose={() => setTransactionToDelete(null)}
+          onConfirm={handleConfirmDelete}
+          isDeleting={isDeleting}
+        />
+      )}
     </div>
   );
 }
@@ -297,10 +179,6 @@ export default function TransactionsPage() {
     </Suspense>
   );
 }
-
-/* =========================
-   STYLES (ADDED BACK)
-========================= */
 
 const pageStyles: React.CSSProperties = {
   display: "flex",

@@ -9,8 +9,8 @@ interface Props {
   data: Transaction[];
   evidences?: Evidence[];
   onRowClick: (transaction: Transaction) => void;
-  onEdit: (transaction: Transaction) => void;
-  onDelete: (transaction: Transaction) => void;
+  onEdit?: (transaction: Transaction) => void;
+  onDelete?: (transaction: Transaction) => void;
   highlightId?: number;
 }
 

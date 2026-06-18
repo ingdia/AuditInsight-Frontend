@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input/input";
 import { Colors } from "@/styles/colors";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { changePassword } from "@/utils/api";
 
 const PASSWORD_PATTERN = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
@@ -36,17 +35,10 @@ export default function ResetPasswordPage() {
     }
 
     setIsSubmitting(true);
-    try {
-      await changePassword(currentPassword, newPassword);
-      router.replace("/dashboard");
-    } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-        "Failed to change password. Please check your current password.";
-      setError(msg);
-    } finally {
-      setIsSubmitting(false);
-    }
+    // ── MOCK: simulate password change ──
+    await new Promise((r) => setTimeout(r, 600));
+    router.replace("/dashboard");
+    setIsSubmitting(false);
   };
 
   return (

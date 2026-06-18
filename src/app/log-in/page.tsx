@@ -3,7 +3,9 @@
 import { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { loginUser } from "@/utils/api";
+/*
+ * import { loginUser } from "@/utils/api"; // ── REAL API (commented for RBAC UI testing)
+ */
 
 /* ── tiny inline SVGs ────────────────────────────────────────────── */
 const EyeIcon = ({ off }: { off?: boolean }) => (
@@ -52,6 +54,14 @@ const FEATURES = [
 ];
 
 /* ── main form ────────────────────────────────────────────────────── */
+/* ── dev accounts ────────────────────────────────────────────────── */
+const DEV_ACCOUNTS = [
+  { role: "CLIENT",  label: "Admin (CEO)",   email: "ceo@insightai.rw",          password: "demo1234", color: "#1e3a8a", bg: "#eff6ff", icon: "🏢" },
+  { role: "MEMBER",  label: "Accountant",    email: "accountant@insightai.rw",   password: "demo1234", color: "#15803d", bg: "#f0fdf4", icon: "📒" },
+  { role: "AUDITOR", label: "Auditor",       email: "auditor@audit.rw",          password: "demo1234", color: "#b45309", bg: "#fffbeb", icon: "🔍" },
+  { role: "ADMIN",   label: "Super Admin",   email: "admin@auditinsight.com",    password: "demo1234", color: "#7c3aed", bg: "#faf5ff", icon: "🌐" },
+] as const;
+
 function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -63,6 +73,19 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const inviteToken = searchParams.get("inviteToken") ?? undefined;
 
+  /*
+   * ── REAL API login (commented for RBAC UI testing) ────────────
+   * const { data } = await loginUser(email.trim(), password, inviteToken);
+   * localStorage.setItem("token", data.token);
+   * localStorage.setItem("role", data.role);
+   * router.replace(data.mustChangePassword ? "/reset-password" : "/dashboard");
+   * ─────────────────────────────────────────────────────────────
+   */
+  const mockLogin = (role: string) => {
+    localStorage.setItem("mockRole", role);
+    router.replace(role === "ADMIN" ? "/admin/organizations" : "/dashboard");
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -71,21 +94,14 @@ function LoginForm() {
       return;
     }
     setIsSubmitting(true);
-    localStorage.removeItem("token");
-    localStorage.removeItem("role");
-    try {
-      const { data } = await loginUser(email.trim(), password, inviteToken);
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("role", data.role);
-      router.replace(data.mustChangePassword ? "/reset-password" : "/dashboard");
-    } catch (err: unknown) {
-      setError(
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-          "Invalid email or password. Please try again."
-      );
-    } finally {
-      setIsSubmitting(false);
+    // ── MOCK: match email to a dev account ──
+    const match = DEV_ACCOUNTS.find((a) => a.email === email.trim());
+    if (match && password === match.password) {
+      mockLogin(match.role);
+      return;
     }
+    setIsSubmitting(false);
+    setError("Invalid email or password. Use a dev account below.");
   };
 
   const googleOAuthUrl = `${
@@ -221,6 +237,27 @@ function LoginForm() {
               Create account
             </Link>
           </p>
+
+          {/* ── DEV ACCOUNTS PILL SWITCHER ── */}
+          <div style={devBox}>
+            <p style={devTitle}>🔧 Dev Preview — switch account</p>
+            <div style={pillTrack}>
+              {DEV_ACCOUNTS.map((a) => (
+                <button
+                  key={a.role}
+                  type="button"
+                  onClick={() => mockLogin(a.role)}
+                  style={{ ...pill, ...(false ? pillActive(a.color) : {}) }}
+                  onMouseEnter={(e) => Object.assign(e.currentTarget.style, pillHover)}
+                  onMouseLeave={(e) => Object.assign(e.currentTarget.style, pill)}
+                >
+                  <span>{a.icon}</span>
+                  <span>{a.label}</span>
+                </button>
+              ))}
+            </div>
+            <p style={devHint}>Password for all accounts: <code style={devCode}>demo1234</code></p>
+          </div>
         </div>
       </div>
     </div>
@@ -514,4 +551,76 @@ const switchLink: React.CSSProperties = {
   color: "#1e3a8a",
   fontWeight: 600,
   textDecoration: "none",
+};
+
+const devBox: React.CSSProperties = {
+  marginTop: 32,
+  padding: "18px 20px",
+  borderRadius: 14,
+  border: "1.5px dashed #cbd5e1",
+  background: "#f8fafc",
+};
+
+const devTitle: React.CSSProperties = {
+  margin: "0 0 14px",
+  fontSize: 12.5,
+  fontWeight: 600,
+  color: "#64748b",
+  textTransform: "uppercase",
+  letterSpacing: "0.06em",
+};
+
+const pillTrack: React.CSSProperties = {
+  display: "flex",
+  gap: 6,
+  background: "#e2e8f0",
+  borderRadius: 999,
+  padding: "4px",
+  marginBottom: 12,
+};
+
+const pill: React.CSSProperties = {
+  flex: 1,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 5,
+  padding: "7px 10px",
+  borderRadius: 999,
+  border: "none",
+  background: "transparent",
+  fontSize: 12.5,
+  fontWeight: 600,
+  color: "#475569",
+  cursor: "pointer",
+  transition: "background 0.15s, color 0.15s",
+  fontFamily: "inherit",
+  whiteSpace: "nowrap",
+};
+
+const pillHover: React.CSSProperties = {
+  ...pill,
+  background: "rgba(255,255,255,0.7)",
+  color: "#0f172a",
+};
+
+const pillActive = (color: string): React.CSSProperties => ({
+  background: "#fff",
+  color,
+  boxShadow: "0 1px 4px rgba(0,0,0,0.12)",
+});
+
+const devHint: React.CSSProperties = {
+  margin: 0,
+  fontSize: 11.5,
+  color: "#94a3b8",
+};
+
+const devCode: React.CSSProperties = {
+  background: "#e2e8f0",
+  borderRadius: 4,
+  padding: "1px 5px",
+  fontSize: 11,
+  fontFamily: "monospace",
+  color: "#1e3a8a",
 };

@@ -1,15 +1,25 @@
 "use client";
 
+import { useState } from "react";
+
 interface Props {
   open: boolean;
   onClose: () => void;
+  onInvite?: (email: string, role: string) => void;
 }
 
-export default function InviteUserModal({
-  open,
-  onClose,
-}: Props) {
+export default function InviteUserModal({ open, onClose, onInvite }: Props) {
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState("AUDITOR");
+
   if (!open) return null;
+
+  const handleInvite = () => {
+    if (email.trim()) {
+      onInvite?.(email.trim(), role);
+      setEmail("");
+    }
+  };
 
   return (
     <div style={styles.overlay}>
@@ -18,23 +28,19 @@ export default function InviteUserModal({
 
         <input
           placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           style={styles.input}
         />
 
-        <select style={styles.input}>
-          <option>Auditor</option>
-          <option>Admin</option>
-          <option>Reviewer</option>
+        <select value={role} onChange={(e) => setRole(e.target.value)} style={styles.input}>
+          <option value="AUDITOR">Auditor</option>
+          <option value="MEMBER">Accountant</option>
         </select>
 
         <div style={styles.actions}>
-          <button onClick={onClose}>
-            Cancel
-          </button>
-
-          <button style={styles.invite}>
-            Invite
-          </button>
+          <button onClick={onClose}>Cancel</button>
+          <button style={styles.invite} onClick={handleInvite}>Invite</button>
         </div>
       </div>
     </div>

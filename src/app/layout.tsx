@@ -1,5 +1,7 @@
 import PageLayout from "../components/layout/PageLayout/PageLayout";
 import { Colors } from "@/styles/colors";
+import { AuthProvider } from "@/context/AuthContext";
+import RoleSwitcher from "@/components/dev/RoleSwitcher";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -11,7 +13,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           fontFamily: "Inter, sans-serif",
         }}
       >
-        <PageLayout>{children}</PageLayout>
+        <AuthProvider>
+          <PageLayout>{children}</PageLayout>
+          {/* ── DEV ONLY: remove before production ── */}
+          <RoleSwitcher />
+        </AuthProvider>
       </body>
     </html>
   );

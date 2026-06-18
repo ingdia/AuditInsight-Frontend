@@ -1,75 +1,58 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import SettingsSidebar from "@/components/settings/SettingsSidebar";
-
-// ORGANIZATION
 import OrganizationProfileCard from "@/components/settings/organization/OrganizationProfileCard";
 import FiscalYearSettings from "@/components/settings/organization/FiscalYearSettings";
 import CurrencySettings from "@/components/settings/organization/CurrencySettings";
-
-// USERS
 import UsersTable from "@/components/settings/users/UsersTable";
 import InviteUserModal from "@/components/settings/users/InviteUserModal";
-
-// PERMISSIONS
 import PermissionsMatrix from "@/components/settings/permissions/PermissionsMetrix";
-
-// WORKFLOW
 import WorkflowStatusesCard from "@/components/settings/workflow/WorkflowStatusesCard";
 import EscalationRulesCard from "@/components/settings/workflow/EscalationRulesCard";
 import AutoAssignmentCard from "@/components/settings/workflow/AutoAssignmentCard";
-
-// COMPLIANCE
 import ApprovalLimitsCard from "@/components/settings/compliance/ApprovalLimitsCard";
 import SegregationRulesCard from "@/components/settings/compliance/SegregationRulesCard";
 import EvidenceRequirementsCard from "@/components/settings/compliance/EvidenceRequirementsCard";
-
-// SECURITY
 import SecuritySettingsCard from "@/components/settings/security/SecuritySettingsCard";
 import PasswordPolicyCard from "@/components/settings/security/PasswordPolicyCard";
 import SessionManagementCard from "@/components/settings/security/SessionManagmentCard";
-
-// AUDIT LOGS
 import AuditLogsTable from "@/components/settings/audit-logs/AuditLogsTable";
-
 import PageToolbar from "@/components/layout/pageToolbar/pageToolbar";
 
 import { theme } from "@/styles/theme";
-import { getOrganisationMembers, getOrganisation, type OrganisationMemberResponse, type OrganisationResponse } from "@/utils/api";
+
+/*
+ * ── REAL API (commented for RBAC UI testing) ──────────────────
+ * Previously: import { getOrganisationMembers, getOrganisation } from "@/utils/api";
+ * Now managed by useSettings hook.
+ * ──────────────────────────────────────────────────────────────
+ */
+import { useSettings } from "@/hooks/useSettings";
+import { usePermissions } from "@/security/access-control";
 
 export default function SettingsPage() {
+  const { org, orgLoading, members, membersLoading, inviteMember } = useSettings();
+  const { canManageOrganisation, canInviteMembers } = usePermissions();
+
   const [active, setActive] = useState<string>("Organization");
-  const [inviteOpen, setInviteOpen] = useState<boolean>(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  const [users, setUsers] = useState<OrganisationMemberResponse[]>([]);
-  const [org, setOrg] = useState<OrganisationResponse | null>(null);
-  const [orgLoading, setOrgLoading] = useState(true);
-  const [usersLoading, setUsersLoading] = useState(false);
-
-  useEffect(() => {
-    const orgId = localStorage.getItem("organisationId") ?? "";
-    if (!orgId) { setOrgLoading(false); return; }
-
-    getOrganisation(orgId)
-      .then(({ data }) => setOrg(data))
-      .catch(() => {})
-      .finally(() => setOrgLoading(false));
-  }, []);
-
-  useEffect(() => {
-    if (active !== "Users & Roles") return;
-    const orgId = localStorage.getItem("organisationId") ?? "";
-    if (!orgId) return;
-    setUsersLoading(true);
-    getOrganisationMembers(orgId)
-      .then(({ data }) => setUsers(data ?? []))
-      .catch(() => {})
-      .finally(() => setUsersLoading(false));
-  }, [active]);
+  // ── Role guard: only Admin (CLIENT) can access settings ──
+  if (!canManageOrganisation) {
+    return (
+      <div style={{ ...styles.page, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ textAlign: "center", color: "#6b7280" }}>
+          <div style={{ fontSize: 40, marginBottom: 12 }}>🔒</div>
+          <p style={{ fontWeight: 600, fontSize: 16, margin: 0 }}>Access Restricted</p>
+          <p style={{ fontSize: 14, marginTop: 6 }}>Only the Organisation Admin can access Settings.</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleSave = () => {
     setSaved(true);
@@ -80,19 +63,11 @@ export default function SettingsPage() {
   return (
     <div style={styles.page}>
       <div style={styles.toolbarWrap}>
-        <PageToolbar
-          title="Settings"
-          filters={["System Settings", "Audit Controls"]}
-          primaryActionLabel={dirty ? "Save Changes" : "Saved"}
-        />
+        <PageToolbar title="Settings" filters={["System Settings", "Audit Controls"]} primaryActionLabel={dirty ? "Save Changes" : "Saved"} />
         <div style={styles.toolbarActions}>
           {dirty && <span style={styles.unsaved}>Unsaved Changes</span>}
           {saved && <span style={styles.saved}>Changes Saved</span>}
-          <button
-            disabled={!dirty}
-            onClick={handleSave}
-            style={{ ...styles.saveBtn, opacity: dirty ? 1 : 0.5 }}
-          >
+          <button disabled={!dirty} onClick={handleSave} style={{ ...styles.saveBtn, opacity: dirty ? 1 : 0.5 }}>
             Save Settings
           </button>
         </div>
@@ -102,7 +77,6 @@ export default function SettingsPage() {
         <SettingsSidebar active={active} setActive={setActive} />
 
         <div style={styles.content}>
-          {/* ORGANIZATION */}
           {active === "Organization" && (
             <div style={styles.grid3}>
               <OrganizationProfileCard
@@ -115,30 +89,29 @@ export default function SettingsPage() {
             </div>
           )}
 
-          {/* USERS & ROLES */}
           {active === "Users & Roles" && (
             <>
               <div style={styles.headerRow}>
                 <div>
                   <h2 style={styles.sectionTitle}>Users & Roles</h2>
-                  <p style={styles.sectionText}>
-                    Manage auditors, reviewers, and access control.
-                  </p>
+                  <p style={styles.sectionText}>Manage auditors, reviewers, and access control.</p>
                 </div>
-                <button style={styles.primaryBtn} onClick={() => setInviteOpen(true)}>
-                  Invite User
-                </button>
+                {/* ── Role guard: only Admin can invite users ── */}
+                {canInviteMembers && (
+                  <button style={styles.primaryBtn} onClick={() => setInviteOpen(true)}>
+                    Invite User
+                  </button>
+                )}
               </div>
-              {usersLoading ? (
+              {membersLoading ? (
                 <p style={{ color: "#6b7280", fontSize: 14 }}>Loading members…</p>
               ) : (
-                <UsersTable users={users} />
+                <UsersTable users={members} />
               )}
             </>
           )}
 
           {active === "Permissions" && <PermissionsMatrix />}
-
           {active === "Workflow" && (
             <div style={styles.grid3}>
               <WorkflowStatusesCard />
@@ -146,7 +119,6 @@ export default function SettingsPage() {
               <AutoAssignmentCard />
             </div>
           )}
-
           {active === "Compliance" && (
             <div style={styles.grid3}>
               <ApprovalLimitsCard />
@@ -154,7 +126,6 @@ export default function SettingsPage() {
               <EvidenceRequirementsCard />
             </div>
           )}
-
           {active === "Security" && (
             <div style={styles.grid3}>
               <SecuritySettingsCard />
@@ -162,60 +133,31 @@ export default function SettingsPage() {
               <SessionManagementCard />
             </div>
           )}
-
           {active === "Audit Logs" && <AuditLogsTable logs={[]} />}
         </div>
       </div>
 
-      <InviteUserModal open={inviteOpen} onClose={() => setInviteOpen(false)} />
+      <InviteUserModal
+        open={inviteOpen}
+        onClose={() => setInviteOpen(false)}
+        onInvite={(email, role) => { inviteMember(email, role); setInviteOpen(false); }}
+      />
     </div>
   );
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  page: {
-    padding: theme.spacing.lg,
-    background: theme.colors.appBackground,
-    minHeight: "100vh",
-  },
-  toolbarWrap: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 20,
-  },
+  page: { padding: theme.spacing.lg, background: theme.colors.appBackground, minHeight: "100vh" },
+  toolbarWrap: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 },
   toolbarActions: { display: "flex", alignItems: "center", gap: 14 },
   unsaved: { fontSize: 13, color: "#b45309", fontWeight: 600 },
   saved: { fontSize: 13, color: "#15803d", fontWeight: 600 },
-  saveBtn: {
-    height: 40, padding: "0 18px", borderRadius: 10,
-    border: "none", background: "#1e3a8a", color: "#fff",
-    cursor: "pointer", fontWeight: 600,
-  },
-  layout: {
-    display: "grid",
-    gridTemplateColumns: "260px 1fr",
-    gap: 20,
-    alignItems: "start",
-  },
+  saveBtn: { height: 40, padding: "0 18px", borderRadius: 10, border: "none", background: "#1e3a8a", color: "#fff", cursor: "pointer", fontWeight: 600 },
+  layout: { display: "grid", gridTemplateColumns: "260px 1fr", gap: 20, alignItems: "start" },
   content: { display: "flex", flexDirection: "column", gap: 20 },
-  grid3: {
-    display: "grid",
-    gridTemplateColumns: "repeat(3, 1fr)",
-    gap: 20,
-    alignItems: "start",
-  },
-  headerRow: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 16,
-  },
+  grid3: { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20, alignItems: "start" },
+  headerRow: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 },
   sectionTitle: { margin: 0, fontSize: 22, fontWeight: 700, color: "#111827" },
   sectionText: { marginTop: 4, color: "#6b7280", fontSize: 14 },
-  primaryBtn: {
-    height: 42, padding: "0 18px", border: "none",
-    borderRadius: 10, background: "#1e3a8a", color: "#fff",
-    cursor: "pointer", fontWeight: 600,
-  },
+  primaryBtn: { height: 42, padding: "0 18px", border: "none", borderRadius: 10, background: "#1e3a8a", color: "#fff", cursor: "pointer", fontWeight: 600 },
 };

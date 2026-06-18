@@ -1,54 +1,25 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { getClientProfile, getAuditorProfile } from "@/utils/api";
+import { useAuth } from "@/context/AuthContext";
 
-interface Profile {
-  firstName: string;
-  lastName: string;
-  emailAddress: string;
-  phone?: string;
-  certificationNumber?: string;
-  address?: string;
-}
+/*
+ * ── REAL API (commented for RBAC UI testing) ─────────────────────
+ * import { getClientProfile, getAuditorProfile } from "@/utils/api";
+ * ─────────────────────────────────────────────────────────────────
+ */
 
-interface UseProfileReturn {
-  profile: Profile | null;
-  loading: boolean;
-  fullName: string;
-  initials: string;
-  role: string;
-}
+export function useProfile() {
+  const { user, loading } = useAuth();
 
-export function useProfile(): UseProfileReturn {
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const fullName = user?.fullName ?? "";
+  const initials = fullName
+    .split(" ")
+    .map((n) => n[0] ?? "")
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 
-  useEffect(() => {
-    const role = typeof window !== "undefined" ? localStorage.getItem("role") : null;
-    if (!role) {
-      setLoading(false);
-      return;
-    }
+  const role = user?.role ?? "";
 
-    const fetcher = role === "AUDITOR" ? getAuditorProfile : getClientProfile;
-
-    fetcher()
-      .then(({ data }) => setProfile(data))
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
-
-  const fullName = profile
-    ? `${profile.firstName ?? ""} ${profile.lastName ?? ""}`.trim()
-    : "";
-
-  const initials = profile
-    ? `${profile.firstName?.[0] ?? ""}${profile.lastName?.[0] ?? ""}`.toUpperCase()
-    : "?";
-
-  const role =
-    typeof window !== "undefined" ? (localStorage.getItem("role") ?? "") : "";
-
-  return { profile, loading, fullName, initials, role };
+  return { profile: user, loading, fullName, initials, role };
 }

@@ -5,11 +5,11 @@ import { ReviewItem } from "@/lib/reviewEngine";
 
 interface Props {
   data: ReviewItem[];
-
   onRowClick?: (row: ReviewItem) => void;
+  onResolve?: (id: string) => void;
 }
 
-export default function ReviewTable({ data, onRowClick }: Props) {
+export default function ReviewTable({ data, onRowClick, onResolve }: Props) {
   return (
     <div style={styles.container}>
       <table style={styles.table}>
@@ -70,9 +70,17 @@ export default function ReviewTable({ data, onRowClick }: Props) {
               <td style={styles.td}>{row.due}</td>
 
               <td style={styles.td}>
-                <button style={styles.statusBtn}>
-                  {row.status}
-                </button>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <button style={styles.statusBtn}>{row.status}</button>
+                  {onResolve && row.status !== "Resolved" && (
+                    <button
+                      style={{ ...styles.statusBtn, background: "#dcfce7", color: "#15803d", borderColor: "#bbf7d0" }}
+                      onClick={(e) => { e.stopPropagation(); onResolve(row.id); }}
+                    >
+                      ✓ Resolve
+                    </button>
+                  )}
+                </div>
               </td>
             </tr>
           ))}

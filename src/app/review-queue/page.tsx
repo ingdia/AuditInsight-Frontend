@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import PageToolbar from "@/components/layout/pageToolbar/pageToolbar";
@@ -11,74 +11,35 @@ import ReviewTable from "@/components/review-queue/ReviewTable";
 import ReviewPagination from "@/components/review-queue/ReviewPagination";
 
 import { theme } from "@/styles/theme";
-import { getReviewQueue, type ReviewQueueResponse, type IssueType } from "@/utils/api";
-import type { ReviewItem } from "@/lib/reviewEngine";
 
-/* =========================
-   MAP API → ReviewItem
-========================= */
-const issueTypeLabel: Record<IssueType, ReviewItem["type"]> = {
-  MISSING_EVIDENCE: "Missing Evidence",
-  COMPLIANCE_ISSUE: "Compliance Issues",
-  RISK_FLAG: "AI / Risk Flags",
-  VERIFICATION_PROBLEM: "Verification Problems",
-};
-
-const issueRisk: Record<IssueType, ReviewItem["risk"]> = {
-  MISSING_EVIDENCE: "Critical",
-  COMPLIANCE_ISSUE: "Critical",
-  RISK_FLAG: "Critical",
-  VERIFICATION_PROBLEM: "Medium",
-};
-
-const statusLabel: Record<string, ReviewItem["status"]> = {
-  OPEN: "Open",
-  RESOLVED: "Resolved",
-  ESCALATED: "Escalated",
-};
-
-function toReviewItem(item: ReviewQueueResponse): ReviewItem {
-  const risk = issueRisk[item.issueType] ?? "Medium";
-  return {
-    id: item.id,
-    type: issueTypeLabel[item.issueType] ?? "System Errors",
-    transactionId: item.transactionId,
-    amount: "—",
-    risk,
-    severity: risk,
-    due: item.createdAt ? item.createdAt.split("T")[0] : "—",
-    status: statusLabel[item.status] ?? "Open",
-  };
-}
+/*
+ * ── REAL API (commented for RBAC UI testing) ──────────────────
+ * Previously: import { getReviewQueue } from "@/utils/api";
+ * Now managed by useReviewQueue hook.
+ * ──────────────────────────────────────────────────────────────
+ */
+import { useReviewQueue } from "@/hooks/useReviewQueue";
+import { usePermissions } from "@/security/access-control";
 
 export default function ReviewQueuePage() {
   const router = useRouter();
+  const { items, loading, flagIssue, resolveIssue } = useReviewQueue();
+  const { canFlagIssue, canResolveIssue } = usePermissions();
 
-  const [reviews, setReviews] = useState<ReviewItem[]>([]);
-  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [activeIssue, setActiveIssue] = useState("All");
   const [severity, setSeverity] = useState("All");
 
-  useEffect(() => {
-    const orgId = localStorage.getItem("organisationId") ?? "";
-    getReviewQueue(orgId)
-      .then(({ data }) => setReviews((data ?? []).map(toReviewItem)))
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
-
   const filteredReviews = useMemo(() => {
-    return reviews.filter((r) => {
+    return items.filter((r) => {
       const matchesIssue = activeIssue === "All" || r.type === activeIssue;
       const matchesSeverity = severity === "All" || r.severity === severity;
       return matchesIssue && matchesSeverity;
     });
-  }, [reviews, activeIssue, severity]);
+  }, [items, activeIssue, severity]);
 
   const pageSize = 10;
   const totalPages = Math.max(1, Math.ceil(filteredReviews.length / pageSize));
-
   const paginated = useMemo(() => {
     const start = (page - 1) * pageSize;
     return filteredReviews.slice(start, start + pageSize);
@@ -97,20 +58,31 @@ export default function ReviewQueuePage() {
       <PageToolbar
         title="Review Queue"
         filters={["All Issues", "My Issues"]}
-        primaryActionLabel="Export"
+        // ── Role guard: Auditor gets "Flag Issue", Accountant gets "Export" ──
+        primaryActionLabel={canFlagIssue ? "Flag Issue" : "Export"}
+        onAdd={canFlagIssue ? () => {
+          flagIssue({
+            type: "Compliance Issues",
+            transactionId: "TXN-0001",
+            amount: "—",
+            risk: "Medium",
+            severity: "Medium",
+            due: new Date().toISOString().split("T")[0],
+            status: "Open",
+          });
+        } : undefined}
       />
 
-      <ReviewStats data={reviews} />
-
+      <ReviewStats data={items} />
       <ReviewFilters severity={severity} setSeverity={setSeverity} />
 
       <div style={styles.layout}>
-        <ReviewSidebar data={reviews} active={activeIssue} setActive={setActiveIssue} />
+        <ReviewSidebar data={items} active={activeIssue} setActive={setActiveIssue} />
         <ReviewTable
           data={paginated}
-          onRowClick={(row) =>
-            router.push(`/transactions?transactionId=${row.transactionId}`)
-          }
+          onRowClick={(row) => router.push(`/transactions?transactionId=${row.transactionId}`)}
+          // ── Role guard: Accountant can resolve, Auditor cannot ──
+          onResolve={canResolveIssue ? (id) => resolveIssue(id, "Resolved via UI") : undefined}
         />
       </div>
 

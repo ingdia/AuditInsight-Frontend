@@ -4,7 +4,6 @@ import { useState, Suspense } from "react";
 import { Input } from "@/components/ui/input/input";
 import { Colors } from "@/styles/colors";
 import { useRouter, useSearchParams } from "next/navigation";
-import { verifyOtp, resendOtp } from "@/utils/api";
 
 function VerifyOtpForm() {
   const router = useRouter();
@@ -29,17 +28,14 @@ function VerifyOtpForm() {
     }
 
     setIsSubmitting(true);
-    try {
-      await verifyOtp(email, otp.trim());
+    // ── MOCK: any 6-digit code is accepted ──
+    await new Promise((r) => setTimeout(r, 600));
+    if (otp.trim().length === 6 && /^\d+$/.test(otp.trim())) {
       router.push("/log-in");
-    } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-        "Invalid or expired OTP. Please try again.";
-      setError(msg);
-    } finally {
-      setIsSubmitting(false);
+    } else {
+      setError("Invalid OTP. Use any 6-digit number for mock.");
     }
+    setIsSubmitting(false);
   };
 
   const handleResend = async () => {
@@ -51,17 +47,10 @@ function VerifyOtpForm() {
     }
 
     setIsResending(true);
-    try {
-      await resendOtp(email);
-      setSuccessMsg("A new OTP has been sent to your email.");
-    } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-        "Failed to resend OTP. Please try again.";
-      setError(msg);
-    } finally {
-      setIsResending(false);
-    }
+    // ── MOCK: simulate resend ──
+    await new Promise((r) => setTimeout(r, 500));
+    setSuccessMsg("A new OTP has been sent to your email.");
+    setIsResending(false);
   };
 
   return (

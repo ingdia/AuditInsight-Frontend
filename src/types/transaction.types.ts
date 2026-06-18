@@ -1,4 +1,4 @@
-export type TransactionStatus = "COMPLETED" | "PENDING" | "FLAGGED";
+export type TransactionStatus = "COMPLETED" | "PENDING" | "FLAGGED" | "PENDING_APPROVAL" | "APPROVED" | "REJECTED";
 
 export type TransactionSource = "MOBILE_MONEY" | "BANK" | "CASH";
 

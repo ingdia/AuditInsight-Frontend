@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signUpUser, type UserRole } from "@/utils/api";
+type UserRole = "CLIENT" | "AUDITOR";
 
 /* ── inline SVGs ──────────────────────────────────────────────────── */
 const EyeIcon = ({ off }: { off?: boolean }) => (
@@ -137,21 +137,14 @@ export default function SignupPage() {
     }
 
     setIsSubmitting(true);
-    try {
-      await signUpUser({ firstName: firstName.trim(), lastName: lastName.trim(), username: email.trim(), password, role });
-      if (role === "CLIENT") {
-        router.push(`/verify-otp?email=${encodeURIComponent(email.trim())}`);
-      } else {
-        router.push("/log-in?registered=auditor");
-      }
-    } catch (err: unknown) {
-      setError(
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-          "Sign up failed. Please try again."
-      );
-    } finally {
-      setIsSubmitting(false);
+    // ── MOCK: simulate signup ──
+    await new Promise((r) => setTimeout(r, 600));
+    if (role === "CLIENT") {
+      router.push(`/verify-otp?email=${encodeURIComponent(email.trim())}`);
+    } else {
+      router.push("/log-in?registered=auditor");
     }
+    setIsSubmitting(false);
   };
 
   return (

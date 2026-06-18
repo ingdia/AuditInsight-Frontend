@@ -8,8 +8,8 @@ import { EvidenceActions } from "./EvidenceActions";
 interface Props {
   evidence: Evidence;
   onView: (evidence: Evidence) => void;
-  onEdit: (evidence: Evidence) => void;
-  onDelete: (evidence: Evidence) => void;
+  onEdit?: (evidence: Evidence) => void;
+  onDelete?: (evidence: Evidence) => void;
 }
 
 export const EvidenceRow = ({

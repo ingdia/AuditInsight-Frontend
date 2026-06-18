@@ -3,7 +3,7 @@
 import { theme } from "@/styles/theme";
 
 interface EvidenceHeaderProps {
-  onAdd: () => void;
+  onAdd?: () => void;
 }
 
 export const EvidenceHeader = ({
@@ -19,12 +19,11 @@ export const EvidenceHeader = ({
             📤 Export
           </button>
 
-          <button
-            style={primaryBtn}
-            onClick={onAdd}
-          >
-            + Add Evidence
-          </button>
+          {onAdd && (
+            <button style={primaryBtn} onClick={onAdd}>
+              + Add Evidence
+            </button>
+          )}
         </div>
       </div>
     </div>
