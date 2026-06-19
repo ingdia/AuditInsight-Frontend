@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { Shield, Check, Loader2 } from "lucide-react";
 import OrganisationSetupStep from "@/components/onboarding/OrganisationSetupStep";
 import PricingPlanStep from "@/components/onboarding/PricingPlanStep";
 import { PlanTier, BillingCycle } from "@/types/billing";
+import { useAuth } from "@/context/AuthContext";
 
 type Step = "org-setup" | "pricing";
 
@@ -15,24 +17,19 @@ interface OrgData {
   country: string;
 }
 
-const ShieldIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-  </svg>
-);
-
 const STEPS: { id: Step; label: string }[] = [
   { id: "org-setup", label: "Organisation" },
-  { id: "pricing", label: "Choose Plan" },
+  { id: "pricing",   label: "Choose Plan"  },
 ];
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const { user, completeOnboarding } = useAuth();
   const [step, setStep] = useState<Step>("org-setup");
   const [orgData, setOrgData] = useState<OrgData | null>(null);
   const [completing, setCompleting] = useState(false);
 
-  const stepIndex = STEPS.findIndex(s => s.id === step);
+  const stepIndex = STEPS.findIndex((s) => s.id === step);
 
   const handleOrgNext = (data: OrgData) => {
     setOrgData(data);
@@ -41,51 +38,91 @@ export default function OnboardingPage() {
 
   const handlePlanSelect = async (plan: PlanTier, cycle: BillingCycle) => {
     setCompleting(true);
-    // MOCK: store onboarding result and redirect
-    localStorage.setItem("onboarding_plan", plan);
+    const org = orgData ?? { orgName: "My Organisation", industry: "", size: "", country: "" };
+    // Persist org and plan to localStorage
+    localStorage.setItem("onboarding_plan",  plan);
     localStorage.setItem("onboarding_cycle", cycle);
-    if (orgData) localStorage.setItem("onboarding_org", JSON.stringify(orgData));
-    await new Promise(r => setTimeout(r, 800));
-    if (plan === "FREE") {
-      router.push("/dashboard");
-    } else {
-      router.push("/dashboard?showPayment=true");
-    }
+    localStorage.setItem("onboarding_org",   JSON.stringify(org));
+    // Write org name back into the auth session so Header shows it immediately
+    completeOnboarding(org.orgName, `org-${Date.now()}`);
+    await new Promise((r) => setTimeout(r, 900));
+    router.push("/dashboard");
   };
+
+  // Derive display info for the top bar
+  const [displayName, setDisplayName] = useState(user?.fullName ?? "New User");
+  const [displayEmail, setDisplayEmail] = useState(user?.email ?? "");
+
+  useEffect(() => {
+    if (!user) {
+      const storedName = typeof window !== "undefined" ? localStorage.getItem("signup_name") : null;
+      const storedEmail = typeof window !== "undefined" ? localStorage.getItem("signup_email") : null;
+      setDisplayName(storedName ?? "New User");
+      setDisplayEmail(storedEmail ?? "");
+    } else {
+      setDisplayName(user.fullName);
+      setDisplayEmail(user.email);
+    }
+  }, [user]);
+
+  const initials = displayName
+    .split(" ")
+    .map((n) => n[0] ?? "")
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 
   return (
     <div style={s.shell}>
-      {/* top bar */}
+      {/* ── Top bar ── */}
       <div style={s.topBar}>
-        <div style={s.logo}>
-          <div style={s.logoMark}><ShieldIcon /></div>
+        {/* Logo */}
+        <div style={s.logoRow}>
+          <div style={s.logoMark}>
+            <Shield size={15} color="#fff" strokeWidth={2.5} />
+          </div>
           <span style={s.logoText}>AuditInsight</span>
         </div>
-        <div style={s.stepIndicator}>
+
+        {/* Step indicator */}
+        <div style={s.stepRow}>
           {STEPS.map((st, i) => (
             <div key={st.id} style={s.stepGroup}>
               <div style={{
                 ...s.stepDot,
-                ...(i < stepIndex ? s.stepDone : {}),
+                ...(i < stepIndex ? s.stepDone  : {}),
                 ...(i === stepIndex ? s.stepActive : {}),
               }}>
-                {i < stepIndex ? "✓" : i + 1}
+                {i < stepIndex ? <Check size={12} strokeWidth={3} /> : i + 1}
               </div>
               <span style={{ ...s.stepLabel, ...(i === stepIndex ? s.stepLabelActive : {}) }}>
                 {st.label}
               </span>
-              {i < STEPS.length - 1 && <div style={{ ...s.stepLine, ...(i < stepIndex ? s.stepLineDone : {}) }} />}
+              {i < STEPS.length - 1 && (
+                <div style={{ ...s.stepLine, ...(i < stepIndex ? s.stepLineDone : {}) }} />
+              )}
             </div>
           ))}
         </div>
+
+        {/* Logged-in user pill */}
+        <div style={s.userPill}>
+          <div style={s.userAvatar}>{initials}</div>
+          <div style={s.userInfo}>
+            <span style={s.userName}>{displayName}</span>
+            <span style={s.userEmail}>{displayEmail}</span>
+          </div>
+        </div>
       </div>
 
-      {/* main content */}
+      {/* ── Main content ── */}
       <div style={s.main}>
         {completing ? (
-          <div style={s.completing}>
-            <div style={s.spinner} />
-            <p style={s.completingText}>Setting up your workspace…</p>
+          <div style={s.completingWrap}>
+            <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+            <div style={s.spinnerRing} />
+            <p style={s.completingTitle}>Setting up your workspace…</p>
+            <p style={s.completingSubtitle}>This will only take a moment.</p>
           </div>
         ) : step === "org-setup" ? (
           <OrganisationSetupStep onNext={handleOrgNext} />
@@ -98,22 +135,118 @@ export default function OnboardingPage() {
 }
 
 const s: Record<string, React.CSSProperties> = {
-  shell: { minHeight: "100vh", background: "#F8FAFC", display: "flex", flexDirection: "column" },
-  topBar: { background: "#fff", borderBottom: "1px solid #E2E8F0", padding: "0 40px", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" },
-  logo: { display: "flex", alignItems: "center", gap: 10 },
-  logoMark: { width: 34, height: 34, borderRadius: 9, background: "linear-gradient(135deg,#0f3d75,#1e3a8a)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" },
-  logoText: { fontSize: 17, fontWeight: 700, color: "#0F172A", letterSpacing: "-0.3px" },
-  stepIndicator: { display: "flex", alignItems: "center", gap: 0 },
+  shell: {
+    minHeight: "100vh",
+    background: "#f8fafc",
+    display: "flex",
+    flexDirection: "column",
+  },
+
+  // ── top bar ──
+  topBar: {
+    background: "#fff",
+    borderBottom: "1px solid #e2e8f0",
+    height: 64,
+    padding: "0 32px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 16,
+    position: "sticky",
+    top: 0,
+    zIndex: 50,
+  },
+
+  logoRow: { display: "flex", alignItems: "center", gap: 10, flexShrink: 0 },
+  logoMark: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    background: "linear-gradient(135deg, #0f3d75, #1e3a8a)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  logoText: { fontSize: 16, fontWeight: 700, color: "#0f172a", letterSpacing: "-0.3px" },
+
+  // ── step indicator ──
+  stepRow: { display: "flex", alignItems: "center" },
   stepGroup: { display: "flex", alignItems: "center", gap: 8 },
-  stepDot: { width: 28, height: 28, borderRadius: "50%", background: "#E2E8F0", color: "#94A3B8", fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" },
+  stepDot: {
+    width: 28,
+    height: 28,
+    borderRadius: "50%",
+    background: "#e2e8f0",
+    color: "#94a3b8",
+    fontSize: 12,
+    fontWeight: 700,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
   stepActive: { background: "#1e3a8a", color: "#fff" },
-  stepDone: { background: "#22c55e", color: "#fff" },
-  stepLabel: { fontSize: 13, color: "#94A3B8", fontWeight: 500, marginRight: 8 },
-  stepLabelActive: { color: "#0F172A", fontWeight: 600 },
-  stepLine: { width: 32, height: 2, background: "#E2E8F0", marginRight: 8 },
+  stepDone:   { background: "#22c55e", color: "#fff" },
+  stepLabel:  { fontSize: 13, color: "#94a3b8", fontWeight: 500, marginRight: 6 },
+  stepLabelActive: { color: "#0f172a", fontWeight: 600 },
+  stepLine:   { width: 36, height: 2, background: "#e2e8f0", marginRight: 6 },
   stepLineDone: { background: "#22c55e" },
-  main: { flex: 1, display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "52px 40px 80px" },
-  completing: { display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, minHeight: 240 },
-  spinner: { width: 40, height: 40, borderRadius: "50%", border: "3px solid #E2E8F0", borderTopColor: "#1e3a8a", animation: "spin 0.8s linear infinite" } as React.CSSProperties,
-  completingText: { fontSize: 16, color: "#64748B", fontWeight: 500 },
+
+  // ── user pill ──
+  userPill: {
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    padding: "6px 14px 6px 6px",
+    borderRadius: 40,
+    border: "1px solid #e2e8f0",
+    background: "#f8fafc",
+    flexShrink: 0,
+  },
+  userAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: "50%",
+    background: "linear-gradient(135deg, #0f3d75, #1e3a8a)",
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: 700,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+  userInfo:  { display: "flex", flexDirection: "column", gap: 1 },
+  userName:  { fontSize: 13, fontWeight: 600, color: "#0f172a", lineHeight: 1.2 },
+  userEmail: { fontSize: 11, color: "#94a3b8", lineHeight: 1.2 },
+
+  // ── main ──
+  main: {
+    flex: 1,
+    display: "flex",
+    alignItems: "flex-start",
+    justifyContent: "center",
+    padding: "52px 40px 80px",
+  },
+
+  // ── completing overlay ──
+  completingWrap: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 14,
+    minHeight: 260,
+  },
+  spinnerRing: {
+    width: 48,
+    height: 48,
+    borderRadius: "50%",
+    border: "3px solid #e2e8f0",
+    borderTopColor: "#1e3a8a",
+    animation: "spin 0.8s linear infinite",
+  } as React.CSSProperties,
+  completingTitle:    { fontSize: 18, fontWeight: 700, color: "#0f172a", margin: 0 },
+  completingSubtitle: { fontSize: 14, color: "#64748b", margin: 0 },
 };
+

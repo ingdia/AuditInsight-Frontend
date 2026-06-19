@@ -7,6 +7,7 @@ export const MOCK_USERS: Record<string, AuthUser> = {
     fullName: "Louise Nzeyimana",
     role: "CLIENT",
     organisationId: "org-001",
+    organisationName: "InsightAI Rwanda Ltd",
     mustChangePassword: false,
   },
   MEMBER: {
@@ -15,6 +16,7 @@ export const MOCK_USERS: Record<string, AuthUser> = {
     fullName: "Eric Bizimana",
     role: "MEMBER",
     organisationId: "org-001",
+    organisationName: "InsightAI Rwanda Ltd",
     mustChangePassword: false,
   },
   AUDITOR: {
@@ -23,6 +25,7 @@ export const MOCK_USERS: Record<string, AuthUser> = {
     fullName: "Grace Uwimana",
     role: "AUDITOR",
     organisationId: "org-001",
+    organisationName: "InsightAI Rwanda Ltd",
     mustChangePassword: false,
   },
   ADMIN: {

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
 import { Input } from "@/components/ui/input/input";
 import { Colors } from "@/styles/colors";
 import Link from "next/link";
@@ -16,11 +17,19 @@ export default function ResetPasswordPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
+  const { user, loading, completePasswordReset } = useAuth();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace("/log-in");
+    }
+  }, [loading, user, router]);
+
   const handleChangePassword = async () => {
     setError("");
 
-    if (!currentPassword) {
-      setError("Please enter your current password");
+    if (!user) {
+      setError("You need to log in first.");
       return;
     }
     if (!PASSWORD_PATTERN.test(newPassword)) {
@@ -35,8 +44,8 @@ export default function ResetPasswordPage() {
     }
 
     setIsSubmitting(true);
-    // ── MOCK: simulate password change ──
     await new Promise((r) => setTimeout(r, 600));
+    completePasswordReset(newPassword);
     router.replace("/dashboard");
     setIsSubmitting(false);
   };

@@ -6,6 +6,7 @@ export interface AuthUser {
   fullName: string;
   role: UserRole;
   organisationId?: string;
+  organisationName?: string;
   mustChangePassword?: boolean;
 }
 
