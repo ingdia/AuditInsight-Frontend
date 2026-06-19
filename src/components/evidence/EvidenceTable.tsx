@@ -7,8 +7,8 @@ import { theme } from "@/styles/theme";
 interface Props {
   data: Evidence[];
   onView: (evidence: Evidence) => void;
-  onEdit: (evidence: Evidence) => void;
-  onDelete: (evidence: Evidence) => void;
+  onEdit?: (evidence: Evidence) => void;
+  onDelete?: (evidence: Evidence) => void;
 }
 
 export const statusStyles = {

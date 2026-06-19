@@ -1,48 +1,40 @@
-import { useEffect, useState } from "react";
+"use client";
 
-// =========================
-// TYPES
-// =========================
-type Transaction = {
-  id: number;
-  riskScore: number;
-  counterparty?: string;
-};
+import { useState, useEffect } from "react";
+import { Transaction } from "@/types/transaction.types";
+import { Evidence } from "@/types/evidence.types";
+import { MOCK_TRANSACTIONS } from "@/mock/transactions.mock";
+import { MOCK_EVIDENCE } from "@/mock/evidence.mock";
 
-type Evidence = {
-  id: number;
-  name?: string;
-};
+/*
+ * ── REAL API (commented for RBAC UI testing) ─────────────────────
+ * import { getTransactions, getEvidence } from "@/utils/api";
+ * ─────────────────────────────────────────────────────────────────
+ */
 
-// =========================
-// HOOK
-// =========================
 export function useDashboardData() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [evidence, setEvidence] = useState<Evidence[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [txRes, evRes] = await Promise.all([
-          fetch("http://localhost:8080/api/transactions"),
-          fetch("http://localhost:8080/api/evidence"),
-        ]);
+    /*
+     * ── REAL API ─────────────────────────────────────────────────
+     * const orgId = localStorage.getItem("organisationId") ?? undefined;
+     * Promise.all([getTransactions(orgId), getEvidence(orgId)])
+     *   .then(([txRes, evRes]) => {
+     *     setTransactions(txRes.data ?? []);
+     *     setEvidence(evRes.data ?? []);
+     *   })
+     *   .catch((err) => console.error("Dashboard fetch error", err))
+     *   .finally(() => setLoading(false));
+     * ─────────────────────────────────────────────────────────────
+     */
 
-        const txData: Transaction[] = await txRes.json();
-        const evData: Evidence[] = await evRes.json();
-
-        setTransactions(txData);
-        setEvidence(evData);
-      } catch (err) {
-        console.error("Dashboard fetch error", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+    // ── MOCK ─────────────────────────────────────────────────────
+    setTransactions(MOCK_TRANSACTIONS);
+    setEvidence(MOCK_EVIDENCE);
+    setLoading(false);
   }, []);
 
   return { transactions, evidence, loading };

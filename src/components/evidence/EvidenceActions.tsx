@@ -7,8 +7,8 @@ import { Eye, Pencil, Trash2 } from "lucide-react";
 interface Props {
   evidence: Evidence;
   onView: (evidence: Evidence) => void;
-  onEdit: (evidence: Evidence) => void;
-  onDelete: (evidence: Evidence) => void;
+  onEdit?: (evidence: Evidence) => void;
+  onDelete?: (evidence: Evidence) => void;
 }
 
 export function EvidenceActions({
@@ -29,22 +29,16 @@ export function EvidenceActions({
       >
         <Eye size={16} />
       </button>
-      <button
-        type="button"
-        title="Update"
-        style={btn}
-        onClick={() => onEdit(evidence)}
-      >
-        <Pencil size={16} />
-      </button>
-      <button
-        type="button"
-        title="Delete"
-        style={{ ...btn, color: theme.colors.danger }}
-        onClick={() => onDelete(evidence)}
-      >
-        <Trash2 size={16} />
-      </button>
+      {onEdit && (
+        <button type="button" title="Update" style={btn} onClick={() => onEdit(evidence)}>
+          <Pencil size={16} />
+        </button>
+      )}
+      {onDelete && (
+        <button type="button" title="Delete" style={{ ...btn, color: theme.colors.danger }} onClick={() => onDelete(evidence)}>
+          <Trash2 size={16} />
+        </button>
+      )}
     </div>
   );
 }

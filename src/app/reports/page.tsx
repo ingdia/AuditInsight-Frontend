@@ -1,246 +1,93 @@
-// app/reports/page.tsx
-
 "use client";
 
 import { useMemo, useState } from "react";
-
 import ReportsToolbar from "@/components/reports/ReportsToolbar";
 import ReportsSidebar from "@/components/reports/ReportsSidebar";
-
 import AuditReadinessCard from "@/components/reports/AuditReadinessCard";
 import EvidenceBreakdownChart from "@/components/reports/EvidenceBreakdownChart";
 import OutstandingIssuesCard from "@/components/reports/OutstandingIssuesCard";
 import RiskDistributionChart from "@/components/reports/RiskDistributionChart";
-
 import HighRiskTransactionsTable from "@/components/reports/HighRiskTransactionsTable";
 import FraudAlertsTable from "@/components/reports/FraudAlertsTable";
-
-import { transactionsData } from "@/data/transactions.data";
-import { evidenceData } from "@/data/evidence.data";
-
-import { buildReviewQueue } from "@/lib/reviewEngine";
-
 import { theme } from "@/styles/theme";
 
+/*
+ * ── REAL API (commented for RBAC UI testing) ──────────────────
+ * Previously: getTransactions, getEvidence, getReviewQueue from "@/utils/api"
+ * Now managed by useReports hook.
+ * ──────────────────────────────────────────────────────────────
+ */
+import { useReports } from "@/hooks/useReports";
+import { usePermissions } from "@/security/access-control";
+
 export default function ReportsPage() {
-  /* =========================
-     FILTER STATE
-  ========================= */
-  const [severity, setSeverity] =
-    useState<string>("All");
+  const { canViewReports } = usePermissions();
+  const [severity, setSeverity] = useState("All");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [activeReport, setActiveReport] = useState("Audit Readiness");
 
-  const [activeReport, setActiveReport] =
-    useState<string>("Audit Readiness");
+  const {
+    transactionsCount, evidenceCount, linkedEvidencePercent, readiness,
+    completeEvidence, pendingEvidence, missingEvidence,
+    verificationProblems, complianceIssues, fraudFlags, controlViolations,
+    highRiskTransactions, fraudAlerts, reviews,
+  } = useReports();
 
-  /* =========================
-     BUILD REVIEW QUEUE
-  ========================= */
-  const reviews = useMemo(() => {
-    return buildReviewQueue(
-      transactionsData,
-      evidenceData
-    );
-  }, []);
-
-  /* =========================
-     FILTERED REVIEWS
-  ========================= */
-  const filteredReviews = useMemo(() => {
-    return reviews.filter((r) => {
-      if (
-        severity !== "All" &&
-        r.risk !== severity
-      ) {
-        return false;
-      }
-
-      return true;
-    });
-  }, [reviews, severity]);
-
-  /* =========================
-     AUDIT READINESS METRICS
-  ========================= */
-  const transactionsCount =
-    transactionsData.length;
-
-  const evidenceCount = evidenceData.length;
-
-  const linkedTransactions = transactionsData.filter(
-    (tx) =>
-      evidenceData.some(
-        (ev) =>
-          Number(ev.transactionId) ===
-          Number(tx.id)
-      )
-  ).length;
-
-  const linkedEvidencePercent = Math.round(
-    (linkedTransactions /
-      transactionsCount) *
-      100
+  const filteredReviews = useMemo(
+    () => reviews.filter((r) => severity === "All" || r.risk === severity),
+    [reviews, severity]
   );
 
-  const criticalIssues = filteredReviews.filter(
-    (r) => r.risk === "Critical"
-  ).length;
-
-  const readiness = Math.max(
-    0,
-    Math.min(
-      100,
-      linkedEvidencePercent -
-        criticalIssues * 2
-    )
-  );
-
-  /* =========================
-     EVIDENCE BREAKDOWN
-  ========================= */
-  const completeEvidence =
-    evidenceData.filter(
-      (e) =>
-        e.status === "Verified"
-    ).length;
-
-  const pendingEvidence =
-    evidenceData.filter(
-      (e) =>
-        e.status === "Pending"
-    ).length;
-
-  const missingEvidence =
-    transactionsCount -
-    linkedTransactions;
-
-  /* =========================
-     OUTSTANDING ISSUES
-  ========================= */
-  const verificationProblems =
-    filteredReviews.filter(
-      (r) =>
-        r.type ===
-        "Verification Problems"
-    ).length;
-
-  const complianceIssues =
-    filteredReviews.filter(
-      (r) =>
-        r.type ===
-        "Compliance Issues"
-    ).length;
-
-  const fraudFlags =
-    filteredReviews.filter(
-      (r) =>
-        r.type ===
-        "AI / Risk Flags"
-    ).length;
-
-  const controlViolations =
-    filteredReviews.filter(
-      (r) =>
-        r.type ===
-        "Control Violations"
-    ).length;
-
-  /* =========================
-     HIGH RISK TRANSACTIONS
-  ========================= */
-  const highRiskTransactions =
-    transactionsData.filter(
-      (tx) => tx.riskScore >= 80
+  if (!canViewReports) {
+    return (
+      <div style={{ ...styles.page, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ textAlign: "center", color: "#6b7280" }}>
+          <div style={{ fontSize: 40, marginBottom: 12 }}>🔒</div>
+          <p style={{ fontWeight: 600, fontSize: 16, margin: 0 }}>Access Restricted</p>
+          <p style={{ fontSize: 14, marginTop: 6 }}>You do not have permission to view Reports.</p>
+        </div>
+      </div>
     );
-
-  /* =========================
-     FRAUD ALERTS
-  ========================= */
-  const fraudAlerts =
-    filteredReviews.filter(
-      (r) =>
-        r.type ===
-        "AI / Risk Flags"
-    );
+  }
 
   return (
     <div style={styles.page}>
-      {/* =========================
-          TOOLBAR
-      ========================= */}
       <ReportsToolbar
-        severity={severity}
-        setSeverity={setSeverity}
+        severity={severity} setSeverity={setSeverity}
+        dateFrom={dateFrom} setDateFrom={setDateFrom}
+        dateTo={dateTo} setDateTo={setDateTo}
       />
 
-      {/* =========================
-          LAYOUT
-      ========================= */}
       <div style={styles.layout}>
-        {/* =========================
-            SIDEBAR
-        ========================= */}
-        <ReportsSidebar
-          active={activeReport}
-          setActive={setActiveReport}
-        />
+        <ReportsSidebar active={activeReport} setActive={setActiveReport} />
 
-        {/* =========================
-            MAIN CONTENT
-        ========================= */}
         <div style={styles.content}>
-          {/* =========================
-              TOP CARDS
-          ========================= */}
           <div style={styles.topGrid}>
             <AuditReadinessCard
               readiness={readiness}
-              linkedEvidencePercent={
-                linkedEvidencePercent
-              }
-              transactionsCount={
-                transactionsCount
-              }
+              linkedEvidencePercent={linkedEvidencePercent}
+              transactionsCount={transactionsCount}
               evidenceCount={evidenceCount}
             />
-
             <EvidenceBreakdownChart
               complete={completeEvidence}
               pending={pendingEvidence}
               missing={missingEvidence}
             />
-
             <OutstandingIssuesCard
-              verificationProblems={
-                verificationProblems
-              }
-              complianceIssues={
-                complianceIssues
-              }
+              verificationProblems={verificationProblems}
+              complianceIssues={complianceIssues}
               fraudFlags={fraudFlags}
-              controlViolations={
-                controlViolations
-              }
+              controlViolations={controlViolations}
             />
           </div>
 
-          {/* =========================
-              CHARTS
-          ========================= */}
-          <RiskDistributionChart
-            reviews={filteredReviews}
-          />
+          <RiskDistributionChart reviews={filteredReviews} />
 
-          {/* =========================
-              TABLES
-          ========================= */}
           <div style={styles.tables}>
-            <HighRiskTransactionsTable
-              data={highRiskTransactions}
-            />
-
-            <FraudAlertsTable
-              data={fraudAlerts}
-            />
+            <HighRiskTransactionsTable data={highRiskTransactions} />
+            <FraudAlertsTable data={fraudAlerts} />
           </div>
         </div>
       </div>
@@ -248,45 +95,10 @@ export default function ReportsPage() {
   );
 }
 
-/* =========================
-   STYLES
-========================= */
-
-const styles: Record<
-  string,
-  React.CSSProperties
-> = {
-  page: {
-    padding: theme.spacing.lg,
-    background:
-      theme.colors.appBackground,
-    minHeight: "100vh",
-  },
-
-  layout: {
-    display: "grid",
-    gridTemplateColumns: "260px 1fr",
-    gap: 20,
-    alignItems: "start",
-  },
-
-  content: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 20,
-  },
-
-  topGrid: {
-    display: "grid",
-    gridTemplateColumns:
-      "repeat(3, 1fr)",
-    gap: 20,
-  },
-
-  tables: {
-    display: "grid",
-    gridTemplateColumns:
-      "1fr 1fr",
-    gap: 20,
-  },
+const styles: Record<string, React.CSSProperties> = {
+  page: { padding: theme.spacing.lg, background: theme.colors.appBackground, minHeight: "100vh" },
+  layout: { display: "grid", gridTemplateColumns: "260px 1fr", gap: 20, alignItems: "start" },
+  content: { display: "flex", flexDirection: "column", gap: 20 },
+  topGrid: { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 },
+  tables: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 },
 };
