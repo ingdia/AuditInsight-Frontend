@@ -7,10 +7,7 @@ import { useRouter } from "next/navigation";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { MOCK_REVIEW_QUEUE } from "@/mock/reviewQueue.mock";
 import {
-  Calendar,
   ArrowUpRight,
-  ArrowDownRight,
-  Plus,
   RefreshCw,
   MoreHorizontal,
   Briefcase,
@@ -19,68 +16,64 @@ import {
   FolderOpen,
   Paperclip,
   BookOpen,
-  Clock,
-  XCircle,
   CheckCircle2,
   Search,
   AlertOctagon,
   FileText,
   Download,
-  Settings,
-  Eye,
+  XCircle,
   TrendingUp,
   TrendingDown,
-  Filter,
   ChevronRight,
   Loader2,
 } from "lucide-react";
 
+const ACCENT = "#0f172a";
+const CHART_BAR = "#cbd5e1";
+const CHART_BAR_ACTIVE = "#64748b";
+
 /* ══════════════════════════════════════════════════════════
-   GREETING BANNER
+   PAGE HEADER
    ══════════════════════════════════════════════════════════ */
-function GreetingBanner({ color, userName, userEmail, orgId, onExport }: { 
-  color: string; 
-  userName: string; 
-  userEmail: string; 
-  orgId?: string;
+function DashboardHeader({
+  userName,
+  userEmail,
+  orgName,
+  roleLabel,
+  onExport,
+}: {
+  userName: string;
+  userEmail: string;
+  orgName?: string;
+  roleLabel: string;
   onExport: () => void;
 }) {
   const hour = new Date().getHours();
-  const greeting = hour < 12 ? "Good Morning" : hour < 17 ? "Good Afternoon" : "Good Evening";
-  
+  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  const dateStr = new Date().toLocaleDateString("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
   return (
-    <div style={{ 
-      background: `linear-gradient(135deg, ${color} 0%, ${color}dd 100%)`, 
-      padding: "24px 32px 42px", 
-      display: "flex", 
-      alignItems: "center", 
-      justifyContent: "space-between", 
-      flexWrap: "wrap", 
-      gap: 20,
-      boxShadow: "0 4px 20px rgba(0,0,0,0.08)"
-    }}>
+    <div style={dashboardHeader}>
       <div>
-        <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.7)", fontWeight: 500, letterSpacing: "0.5px" }}>
-          {greeting}
+        <p style={headerEyebrow}>{greeting}</p>
+        <h1 style={headerTitle}>{userName || "Dashboard"}</h1>
+        <p style={headerMeta}>
+          {roleLabel}
+          {orgName ? ` · ${orgName}` : ""}
+          {" · "}
+          {userEmail}
         </p>
-        <h1 style={{ margin: "6px 0 0", fontSize: 28, fontWeight: 800, color: "#fff", letterSpacing: "-0.5px" }}>
-          {userName}
-        </h1>
-        <p style={{ margin: "6px 0 0", fontSize: 13, color: "rgba(255,255,255,0.6)", display: "flex", alignItems: "center", gap: 8 }}>
-          <span>{userEmail}</span>
-          {orgId && <><span style={{ opacity: 0.4 }}>•</span><span>Org {orgId}</span></>}
-        </p>
+        <p style={headerDate}>{dateStr}</p>
       </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <button style={yearBtn}>
-          <Calendar size={14} style={{ marginRight: 8 }} />
-          {new Date().getFullYear()}
-        </button>
-        <button style={exportBtn} onClick={onExport}>
-          <Download size={14} style={{ marginRight: 8 }} />
-          Export Data
-        </button>
-      </div>
+      <button type="button" style={headerActionBtn} onClick={onExport}>
+        <Download size={15} />
+        Export
+      </button>
     </div>
   );
 }
@@ -89,113 +82,68 @@ function GreetingBanner({ color, userName, userEmail, orgId, onExport }: {
    METRIC CARD
    ══════════════════════════════════════════════════════════ */
 function MetricCard({ icon, value, label, trend, trendUp, color, onClick }: {
-  icon: React.ReactNode; 
-  value: string | number; 
+  icon: React.ReactNode;
+  value: string | number;
   label: string;
-  trend?: string; 
-  trendUp?: boolean; 
+  trend?: string;
+  trendUp?: boolean;
   color: string;
   onClick?: () => void;
 }) {
   const [isHovered, setIsHovered] = useState(false);
-  
+
   return (
-    <div 
+    <div
       style={{
         ...metricCard,
-        transform: isHovered ? "translateY(-4px)" : "translateY(0)",
-        boxShadow: isHovered 
-          ? "0 8px 24px rgba(0,0,0,0.12)" 
-          : "0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.04)",
+        borderColor: isHovered ? "#cbd5e1" : "#e2e8f0",
+        boxShadow: isHovered ? "0 4px 16px rgba(15,23,42,0.06)" : "none",
         cursor: onClick ? "pointer" : "default",
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={onClick}
     >
-      <div style={{ position: "absolute", top: 16, right: 16, color: "#94a3b8" }}>
-        <ArrowUpRight size={16} />
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 16 }}>
+        <div style={{
+          width: 40,
+          height: 40,
+          borderRadius: 10,
+          background: "#f8fafc",
+          border: "1px solid #e2e8f0",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color,
+        }}>
+          {icon}
+        </div>
+        {onClick && <ArrowUpRight size={15} style={{ color: "#94a3b8", flexShrink: 0 }} />}
       </div>
-      <div style={{ 
-        width: 42, 
-        height: 42, 
-        borderRadius: 12, 
-        background: `${color}15`, 
-        display: "flex", 
-        alignItems: "center", 
-        justifyContent: "center", 
-        color, 
-        marginBottom: 16,
-        transition: "all 0.2s ease"
-      }}>
-        {icon}
+      <div style={{ fontSize: 28, fontWeight: 700, color: ACCENT, letterSpacing: "-0.5px", lineHeight: 1, marginBottom: 6 }}>
+        {value}
       </div>
-      <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 6 }}>
-        <span style={{ fontSize: 32, fontWeight: 800, color: "#0f172a", letterSpacing: "-1px", lineHeight: 1 }}>
-          {value}
-        </span>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+        <span style={{ fontSize: 13, color: "#64748b", fontWeight: 500 }}>{label}</span>
         {trend && (
           <span style={{
-            padding: "3px 10px", 
-            borderRadius: 999, 
-            fontSize: 11, 
-            fontWeight: 700,
-            background: trendUp ? "#dbeafe" : "#f1f5f9",
-            color: trendUp ? "#2563eb" : "#64748b",
-            display: "flex",
+            padding: "2px 8px",
+            borderRadius: 6,
+            fontSize: 11,
+            fontWeight: 600,
+            background: "#f8fafc",
+            color: trendUp ? "#15803d" : "#64748b",
+            border: "1px solid #e2e8f0",
+            display: "inline-flex",
             alignItems: "center",
-            gap: 2
+            gap: 3,
+            whiteSpace: "nowrap",
           }}>
-            {trendUp ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
+            {trendUp ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
             {trend}
           </span>
         )}
       </div>
-      <span style={{ fontSize: 13, color: "#64748b", fontWeight: 500 }}>{label}</span>
-    </div>
-  );
-}
-
-/* ══════════════════════════════════════════════════════════
-   ADD WIDGET CARD
-   ══════════════════════════════════════════════════════════ */
-function AddWidgetCard({ onClick }: { onClick: () => void }) {
-  const [isHovered, setIsHovered] = useState(false);
-  
-  return (
-    <div 
-      style={{ 
-        ...metricCard, 
-        display: "flex", 
-        alignItems: "center", 
-        justifyContent: "center", 
-        flexDirection: "column", 
-        gap: 10, 
-        cursor: "pointer",
-        border: `2px dashed ${isHovered ? "#3b82f6" : "#cbd5e1"}`,
-        background: isHovered ? "#f8fafc" : "#fff",
-        transition: "all 0.2s ease"
-      }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      onClick={onClick}
-    >
-      <div style={{ 
-        width: 48, 
-        height: 48, 
-        borderRadius: "50%", 
-        background: isHovered ? "#dbeafe" : "#f1f5f9", 
-        display: "flex", 
-        alignItems: "center", 
-        justifyContent: "center", 
-        color: isHovered ? "#2563eb" : "#64748b",
-        transition: "all 0.2s ease"
-      }}>
-        <Plus size={24} />
-      </div>
-      <span style={{ fontSize: 13, color: isHovered ? "#2563eb" : "#94a3b8", fontWeight: 600 }}>
-        Add new widget
-      </span>
     </div>
   );
 }
@@ -345,11 +293,11 @@ function CardShell({ title, count, children, onRefresh, onMore, style }: {
   
   return (
     <div style={{ ...cardShell, ...style }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18, paddingBottom: 14, borderBottom: "1px solid #f1f5f9" }}>
         <div>
-          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#0f172a" }}>{title}</h3>
+          <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: ACCENT }}>{title}</h3>
           {count !== undefined && (
-            <span style={{ fontSize: 24, fontWeight: 800, color: "#0f172a", letterSpacing: "-0.5px" }}>
+            <span style={{ fontSize: 12, color: "#94a3b8", marginTop: 4, display: "block" }}>
               {count}
             </span>
           )}
@@ -419,16 +367,17 @@ function EmptyState({ icon, message }: { icon: React.ReactNode; message: string 
 function ClientDashboard({ transactions, evidence, user }: { transactions: any[]; evidence: any[]; user: any }) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const highRisk = transactions.filter((t) => (t.riskScore ?? 0) >= 80 || t.evidenceStatus === "MISSING").length;
-  const coverage = transactions.length > 0 ? Math.round((evidence.length / transactions.length) * 100) : 0;
-  const pending = transactions.filter((t) => t.status === "Pending" || t.status === "Under Review").length;
+  const coverage = transactions.length > 0
+    ? Math.round((transactions.filter((t) => t.evidenceStatus === "COMPLETE").length / transactions.length) * 100)
+    : 0;
+  const pending = transactions.filter((t) => t.status === "PENDING" || t.status === "PENDING_APPROVAL" || t.status === "FLAGGED").length;
   const verified = evidence.filter((e) => e.status === "Verified").length;
-  const COLOR = "#1e3a8a";
+  const activityBars = [42, 55, 38, 62, 48, 70, 58, 65, 52, 74, 60, 68, 55, 72];
 
   const handleExport = () => {
     console.log("Exporting data...");
-    // Implement export logic
   };
 
   const handleRefresh = () => {
@@ -436,69 +385,49 @@ function ClientDashboard({ transactions, evidence, user }: { transactions: any[]
     setTimeout(() => setIsLoading(false), 1000);
   };
 
-  const handleAddWidget = () => {
-    console.log("Add widget clicked");
-    // Implement widget addition logic
-  };
-
-  const handleTransactionClick = (transactionId: string) => {
-    router.push(`/transactions/${transactionId}`);
-  };
-
-  const handleEvidenceClick = (evidenceId: string) => {
-    router.push(`/evidence/${evidenceId}`);
-  };
-
   return (
     <div style={pageBg}>
-      <GreetingBanner 
-        color={COLOR} 
-        userName={user?.fullName ?? ""} 
-        userEmail={user?.email ?? ""} 
-        orgId={user?.organisationId}
-        onExport={handleExport}
-      />
+      <div style={dashboardShell}>
+        <DashboardHeader
+          userName={user?.fullName ?? ""}
+          userEmail={user?.email ?? ""}
+          orgName={user?.organisationName}
+          roleLabel="Organisation Admin"
+          onExport={handleExport}
+        />
 
-      {/* METRIC CARDS ROW */}
-      <div style={metricsRow}>
-        <MetricCard 
-          icon={<Briefcase size={20} />} 
-          value={transactions.length} 
-          label="Total Transactions" 
-          trend="3.75%" 
-          trendUp={true} 
-          color={COLOR}
-          onClick={() => router.push("/transactions")}
-        />
-        <MetricCard 
-          icon={<AlertTriangle size={20} />} 
-          value={highRisk} 
-          label="High Risk" 
-          trend="0.02%" 
-          trendUp={false} 
-          color="#0f172a"
-          onClick={() => router.push("/transactions?filter=high-risk")}
-        />
-        <MetricCard 
-          icon={<BarChart3 size={20} />} 
-          value={`${coverage}%`} 
-          label="Evidence Coverage" 
-          trend="1.72%" 
-          trendUp={true} 
-          color="#2563eb"
-          onClick={() => router.push("/evidence")}
-        />
-        <MetricCard 
-          icon={<FolderOpen size={20} />} 
-          value={evidence.length} 
-          label="Evidence Files" 
-          trend="3.72%" 
-          trendUp={false} 
-          color="#3b82f6"
-          onClick={() => router.push("/evidence")}
-        />
-        <AddWidgetCard onClick={handleAddWidget} />
-      </div>
+        <div style={metricsRow}>
+          <MetricCard
+            icon={<Briefcase size={18} />}
+            value={transactions.length}
+            label="Total Transactions"
+            color="#475569"
+            onClick={() => router.push("/transactions")}
+          />
+          <MetricCard
+            icon={<AlertTriangle size={18} />}
+            value={highRisk}
+            label="High Risk Items"
+            trend={`${highRisk} flagged`}
+            trendUp={false}
+            color="#dc2626"
+            onClick={() => router.push("/transactions")}
+          />
+          <MetricCard
+            icon={<BarChart3 size={18} />}
+            value={`${coverage}%`}
+            label="Evidence Coverage"
+            color="#15803d"
+            onClick={() => router.push("/evidence")}
+          />
+          <MetricCard
+            icon={<FolderOpen size={18} />}
+            value={evidence.length}
+            label="Evidence Files"
+            color="#475569"
+            onClick={() => router.push("/evidence")}
+          />
+        </div>
 
       {/* MIDDLE 3-COLUMN GRID */}
       <div style={threeColGrid}>
@@ -516,11 +445,11 @@ function ClientDashboard({ transactions, evidence, user }: { transactions: any[]
                 icon={<AlertTriangle size={16} />} 
                 iconBg="#fef2f2" 
                 iconColor="#dc2626" 
-                title={`Transaction #${t.id || i + 1}`} 
-                subtitle={t.description || "No description"} 
-                rightLabel="High Risk" 
+                title={t.name || t.id}
+                subtitle={t.counterparty || "No counterparty"}
+                rightLabel="High Risk"
                 rightColor="#dc2626"
-                onClick={() => handleTransactionClick(t.id)}
+                onClick={() => router.push("/transactions")}
               />
             ))}
             {highRisk === 0 && (
@@ -544,13 +473,13 @@ function ClientDashboard({ transactions, evidence, user }: { transactions: any[]
               <ListItem 
                 key={i} 
                 icon={<Paperclip size={16} />} 
-                iconBg="#dbeafe" 
-                iconColor="#2563eb" 
-                title={e.fileName || `Evidence #${i + 1}`} 
-                subtitle={e.uploadedBy || "Unknown"} 
-                rightLabel={e.status || "Pending"} 
+                iconBg="#f8fafc"
+                iconColor="#475569" 
+                title={e.documentName || e.name || e.id}
+                subtitle={e.category || "Document"}
+                rightLabel={e.status || "Pending"}
                 rightColor={e.status === "Verified" ? "#16a34a" : "#d97706"}
-                onClick={() => handleEvidenceClick(e.id)}
+                onClick={() => router.push("/evidence")}
               />
             ))}
             {evidence.length === 0 && (
@@ -573,15 +502,15 @@ function ClientDashboard({ transactions, evidence, user }: { transactions: any[]
             <span style={{ fontSize: 20, fontWeight: 800, color: "#0f172a" }}>{transactions.length}</span>
           </div>
           <SegmentedBar segments={[
-            { value: transactions.length - highRisk - pending, color: "#1e3a8a" },
-            { value: pending, color: "#64748b" },
+            { value: transactions.length - highRisk - pending, color: "#16a34a" },
+            { value: pending, color: "#94a3b8" },
             { value: highRisk, color: "#dc2626" },
           ]} />
-          <CategoryRow dotColor="#1e3a8a" label="Verified Transactions" value={transactions.length - highRisk - pending} />
-          <CategoryRow dotColor="#64748b" label="Pending Review" value={pending} />
+          <CategoryRow dotColor="#16a34a" label="Complete" value={transactions.length - highRisk - pending} />
+          <CategoryRow dotColor="#94a3b8" label="In Progress" value={pending} />
           <CategoryRow dotColor="#dc2626" label="High Risk" value={highRisk} />
-          <CategoryRow dotColor="#2563eb" label="Evidence Verified" value={verified} />
-          <CategoryRow dotColor="#94a3b8" label="Evidence Missing" value={evidence.filter((e) => e.status === "Missing").length} />
+          <CategoryRow dotColor="#64748b" label="Evidence Verified" value={verified} />
+          <CategoryRow dotColor="#cbd5e1" label="Missing Evidence Txns" value={transactions.filter((t) => t.evidenceStatus === "MISSING").length} />
         </CardShell>
       </div>
 
@@ -591,18 +520,16 @@ function ClientDashboard({ transactions, evidence, user }: { transactions: any[]
           title="Evidence Coverage KPI"
           onRefresh={handleRefresh}
         >
-          <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 16 }}>
-            <span style={{ fontSize: 48, fontWeight: 800, color: "#0f172a", letterSpacing: "-2px" }}>
-              {coverage.toFixed(2)}%
-            </span>
+          <div style={{ fontSize: 40, fontWeight: 700, color: ACCENT, letterSpacing: "-1px", marginBottom: 16 }}>
+            {coverage}%
           </div>
-          <div style={{ height: 12, background: "#f1f5f9", borderRadius: 8, overflow: "hidden", marginBottom: 12 }}>
-            <div style={{ 
-              height: "100%", 
-              width: `${coverage}%`, 
-              background: `linear-gradient(90deg, ${COLOR} 0%, ${COLOR}cc 100%)`, 
-              borderRadius: 8, 
-              transition: "width 0.8s ease" 
+          <div style={{ height: 8, background: "#f1f5f9", borderRadius: 6, overflow: "hidden", marginBottom: 12 }}>
+            <div style={{
+              height: "100%",
+              width: `${coverage}%`,
+              background: ACCENT,
+              borderRadius: 6,
+              transition: "width 0.8s ease",
             }} />
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#94a3b8", fontWeight: 600 }}>
@@ -614,55 +541,32 @@ function ClientDashboard({ transactions, evidence, user }: { transactions: any[]
           title="Transaction Overview"
           onRefresh={handleRefresh}
         >
-          <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height: 120, padding: "12px 0" }}>
-            {Array.from({ length: 14 }).map((_, i) => {
-              const h = 20 + Math.random() * 70;
-              return (
-                <div 
-                  key={i} 
-                  style={{ 
-                    flex: 1, 
-                    background: `linear-gradient(180deg, ${COLOR} 0%, ${COLOR}88 100%)`, 
-                    borderRadius: "6px 6px 0 0", 
-                    height: `${h}%`, 
-                    minHeight: 8,
-                    transition: "all 0.3s ease",
-                    cursor: "pointer"
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = "scaleY(1.05)";
-                    e.currentTarget.style.opacity = "0.8";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = "scaleY(1)";
-                    e.currentTarget.style.opacity = "1";
-                  }}
-                />
-              );
-            })}
+          <div style={{ display: "flex", alignItems: "flex-end", gap: 6, height: 100, padding: "8px 0" }}>
+            {activityBars.map((h, i) => (
+              <div
+                key={i}
+                style={{
+                  flex: 1,
+                  background: i === activityBars.length - 1 ? CHART_BAR_ACTIVE : CHART_BAR,
+                  borderRadius: "4px 4px 0 0",
+                  height: `${h}%`,
+                  minHeight: 6,
+                }}
+              />
+            ))}
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#94a3b8", marginTop: 8 }}>
-            <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span>
+            <span>Jan</span><span>Mar</span><span>May</span><span>Jul</span>
           </div>
         </CardShell>
       </div>
 
       {isLoading && (
-        <div style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: "rgba(255,255,255,0.8)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          zIndex: 1000
-        }}>
-          <Loader2 size={48} style={{ color: COLOR, animation: "spin 1s linear infinite" }} />
+        <div style={loadingOverlay}>
+          <Loader2 size={40} style={{ color: ACCENT, animation: "spin 1s linear infinite" }} />
         </div>
       )}
+      </div>
     </div>
   );
 }
@@ -688,7 +592,6 @@ function MemberDashboard({ transactions, evidence, user }: { transactions: any[]
   const coverage = transactions.length > 0
     ? Math.round((transactions.filter((t) => t.evidenceStatus === "COMPLETE").length / transactions.length) * 100)
     : 0;
-  const COLOR = "#2563eb";
   const uploadActivity = [35, 42, 28, 55, 48, 62, 58, 70, 45, 52, 68, 74, 60, 80];
 
   const handleExport = () => {
@@ -702,50 +605,51 @@ function MemberDashboard({ transactions, evidence, user }: { transactions: any[]
 
   return (
     <div style={pageBg}>
-      <GreetingBanner
-        color={COLOR}
-        userName={user?.fullName ?? ""}
-        userEmail={user?.email ?? ""}
-        orgId={user?.organisationId}
-        onExport={handleExport}
-      />
+      <div style={dashboardShell}>
+        <DashboardHeader
+          userName={user?.fullName ?? ""}
+          userEmail={user?.email ?? ""}
+          orgName={user?.organisationName}
+          roleLabel="Accountant"
+          onExport={handleExport}
+        />
 
-      <div style={metricsRow}>
-        <MetricCard
-          icon={<AlertOctagon size={20} />}
-          value={openReviewItems.length}
-          label="Open Review Items"
-          trend={`${openReviewItems.filter((i) => i.risk === "Critical").length} critical`}
-          trendUp={false}
-          color="#dc2626"
-          onClick={() => router.push("/review-queue")}
-        />
-        <MetricCard
-          icon={<XCircle size={20} />}
-          value={needsEvidence.length}
-          label="Needs Evidence"
-          trend={`${missingEvidenceTxns.length} missing`}
-          trendUp={false}
-          color="#0f172a"
-          onClick={() => router.push("/evidence")}
-        />
-        <MetricCard
-          icon={<BookOpen size={20} />}
-          value={draftsToComplete}
-          label="Transactions In Progress"
-          color={COLOR}
-          onClick={() => router.push("/transactions")}
-        />
-        <MetricCard
-          icon={<CheckCircle2 size={20} />}
-          value={`${coverage}%`}
-          label="Evidence Coverage"
-          trend={`${verifiedEvidence} verified`}
-          trendUp={true}
-          color="#16a34a"
-          onClick={() => router.push("/reports")}
-        />
-      </div>
+        <div style={metricsRow}>
+          <MetricCard
+            icon={<AlertOctagon size={18} />}
+            value={openReviewItems.length}
+            label="Open Review Items"
+            trend={`${openReviewItems.filter((i) => i.risk === "Critical").length} critical`}
+            trendUp={false}
+            color="#dc2626"
+            onClick={() => router.push("/review-queue")}
+          />
+          <MetricCard
+            icon={<XCircle size={18} />}
+            value={needsEvidence.length}
+            label="Needs Evidence"
+            trend={`${missingEvidenceTxns.length} missing`}
+            trendUp={false}
+            color="#475569"
+            onClick={() => router.push("/evidence")}
+          />
+          <MetricCard
+            icon={<BookOpen size={18} />}
+            value={draftsToComplete}
+            label="In Progress"
+            color="#475569"
+            onClick={() => router.push("/transactions")}
+          />
+          <MetricCard
+            icon={<CheckCircle2 size={18} />}
+            value={`${coverage}%`}
+            label="Evidence Coverage"
+            trend={`${verifiedEvidence} verified`}
+            trendUp={true}
+            color="#15803d"
+            onClick={() => router.push("/reports")}
+          />
+        </div>
 
       <div style={threeColGrid}>
         <CardShell
@@ -822,9 +726,9 @@ function MemberDashboard({ transactions, evidence, user }: { transactions: any[]
           ]} />
           <CategoryRow dotColor="#16a34a" label="Verified" value={verifiedEvidence} />
           <CategoryRow dotColor="#64748b" label="Pending Review" value={pendingEvidence} />
-          <CategoryRow dotColor="#dc2626" label="Transactions Missing Docs" value={missingEvidenceTxns.length} />
-          <CategoryRow dotColor="#2563eb" label="Partial Evidence" value={partialEvidenceTxns.length} />
-          <CategoryRow dotColor="#94a3b8" label="Coverage" value={`${coverage}%`} />
+          <CategoryRow dotColor="#dc2626" label="Missing Docs" value={missingEvidenceTxns.length} />
+          <CategoryRow dotColor="#94a3b8" label="Partial Evidence" value={partialEvidenceTxns.length} />
+          <CategoryRow dotColor="#cbd5e1" label="Coverage" value={`${coverage}%`} />
         </CardShell>
       </div>
 
@@ -833,16 +737,15 @@ function MemberDashboard({ transactions, evidence, user }: { transactions: any[]
           title="Evidence Coverage"
           onRefresh={handleRefresh}
         >
-          <div style={{ fontSize: 48, fontWeight: 800, color: "#0f172a", letterSpacing: "-2px", marginBottom: 16 }}>
+          <div style={{ fontSize: 40, fontWeight: 700, color: ACCENT, letterSpacing: "-1px", marginBottom: 16 }}>
             {coverage}%
           </div>
-          <div style={{ height: 12, background: "#f1f5f9", borderRadius: 8, overflow: "hidden", marginBottom: 12 }}>
+          <div style={{ height: 8, background: "#f1f5f9", borderRadius: 6, overflow: "hidden", marginBottom: 12 }}>
             <div style={{
               height: "100%",
               width: `${coverage}%`,
-              background: `linear-gradient(90deg, ${COLOR} 0%, ${COLOR}cc 100%)`,
-              borderRadius: 8,
-              transition: "width 0.8s ease",
+              background: ACCENT,
+              borderRadius: 6,
             }} />
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#94a3b8", fontWeight: 600 }}>
@@ -854,16 +757,16 @@ function MemberDashboard({ transactions, evidence, user }: { transactions: any[]
           title="Upload Activity"
           onRefresh={handleRefresh}
         >
-          <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height: 120, padding: "12px 0" }}>
+          <div style={{ display: "flex", alignItems: "flex-end", gap: 6, height: 100, padding: "8px 0" }}>
             {uploadActivity.map((h, i) => (
               <div
                 key={i}
                 style={{
                   flex: 1,
-                  background: `linear-gradient(180deg, ${COLOR} 0%, ${COLOR}88 100%)`,
-                  borderRadius: "6px 6px 0 0",
+                  background: i === uploadActivity.length - 1 ? CHART_BAR_ACTIVE : CHART_BAR,
+                  borderRadius: "4px 4px 0 0",
                   height: `${h}%`,
-                  minHeight: 8,
+                  minHeight: 6,
                 }}
               />
             ))}
@@ -875,21 +778,11 @@ function MemberDashboard({ transactions, evidence, user }: { transactions: any[]
       </div>
 
       {isLoading && (
-        <div style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: "rgba(255,255,255,0.8)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          zIndex: 1000,
-        }}>
-          <Loader2 size={48} style={{ color: COLOR, animation: "spin 1s linear infinite" }} />
+        <div style={loadingOverlay}>
+          <Loader2 size={40} style={{ color: ACCENT, animation: "spin 1s linear infinite" }} />
         </div>
       )}
+      </div>
     </div>
   );
 }
@@ -900,11 +793,14 @@ function MemberDashboard({ transactions, evidence, user }: { transactions: any[]
 function AuditorDashboard({ transactions, evidence, user }: { transactions: any[]; evidence: any[]; user: any }) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const highRisk = transactions.filter((t) => (t.riskScore ?? 0) >= 80).length;
   const missingEvidence = transactions.filter((t) => t.evidenceStatus === "MISSING").length;
-  const coverage = transactions.length > 0 ? Math.round((evidence.length / transactions.length) * 100) : 0;
-  const COLOR = "#3b82f6";
+  const coverage = transactions.length > 0
+    ? Math.round((transactions.filter((t) => t.evidenceStatus === "COMPLETE").length / transactions.length) * 100)
+    : 0;
+  const flaggedIssues = MOCK_REVIEW_QUEUE.filter((i) => i.status === "Open" || i.status === "Escalated").length;
+  const auditActivity = [48, 52, 44, 58, 62, 55, 68, 72, 60, 75, 65, 70, 58, 78];
 
   const handleExport = () => {
     console.log("Exporting data...");
@@ -915,216 +811,171 @@ function AuditorDashboard({ transactions, evidence, user }: { transactions: any[
     setTimeout(() => setIsLoading(false), 1000);
   };
 
-  const handleAddWidget = () => {
-    console.log("Add widget clicked");
-  };
-
   return (
     <div style={pageBg}>
-      <GreetingBanner 
-        color={COLOR} 
-        userName={user?.fullName ?? ""} 
-        userEmail={user?.email ?? ""} 
-        orgId={user?.organisationId}
-        onExport={handleExport}
-      />
-
-      <div style={metricsRow}>
-        <MetricCard 
-          icon={<Search size={20} />} 
-          value={transactions.length} 
-          label="Transactions" 
-          trend="10.3%" 
-          trendUp={true} 
-          color={COLOR}
-          onClick={() => router.push("/transactions")}
+      <div style={dashboardShell}>
+        <DashboardHeader
+          userName={user?.fullName ?? ""}
+          userEmail={user?.email ?? ""}
+          orgName={user?.organisationName}
+          roleLabel="Auditor"
+          onExport={handleExport}
         />
-        <MetricCard 
-          icon={<AlertOctagon size={20} />} 
-          value={highRisk} 
-          label="High Risk" 
-          trend="4.7%" 
-          trendUp={false} 
-          color="#0f172a"
-          onClick={() => router.push("/transactions?filter=high-risk")}
-        />
-        <MetricCard 
-          icon={<FileText size={20} />} 
-          value={missingEvidence} 
-          label="Missing Evidence" 
-          trend="2.1%" 
-          trendUp={false} 
-          color="#475569"
-          onClick={() => router.push("/evidence?status=missing")}
-        />
-        <MetricCard 
-          icon={<BarChart3 size={20} />} 
-          value={`${coverage}%`} 
-          label="Evidence Coverage" 
-          trend="12.8%" 
-          trendUp={true} 
-          color="#2563eb"
-          onClick={() => router.push("/evidence")}
-        />
-        <AddWidgetCard onClick={handleAddWidget} />
-      </div>
 
-      <div style={threeColGrid}>
-        <CardShell 
-          title="High Risk Items" 
-          count={`${highRisk} Items`}
-          onRefresh={handleRefresh}
-          onMore={() => console.log("More options")}
-        >
-          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            {transactions.filter((t) => (t.riskScore ?? 0) >= 80).slice(0, 5).map((t, i) => (
-              <ListItem 
-                key={i} 
-                icon={<AlertOctagon size={16} />} 
-                iconBg="#fef2f2" 
-                iconColor="#dc2626" 
-                title={`Transaction #${t.id || i + 1}`} 
-                subtitle={`Risk Score: ${t.riskScore || "N/A"}`} 
-                rightLabel="High Risk" 
-                rightColor="#dc2626"
-                onClick={() => router.push(`/transactions/${t.id}`)}
-              />
-            ))}
-            {highRisk === 0 && (
-              <EmptyState 
-                icon={<CheckCircle2 size={24} style={{ color: "#16a34a" }} />} 
-                message="No high risk items"
-              />
-            )}
-          </div>
-        </CardShell>
+        <div style={metricsRow}>
+          <MetricCard
+            icon={<Search size={18} />}
+            value={transactions.length}
+            label="Transactions Reviewed"
+            color="#475569"
+            onClick={() => router.push("/transactions")}
+          />
+          <MetricCard
+            icon={<AlertOctagon size={18} />}
+            value={highRisk}
+            label="High Risk"
+            trend={`${highRisk} flagged`}
+            trendUp={false}
+            color="#dc2626"
+            onClick={() => router.push("/transactions")}
+          />
+          <MetricCard
+            icon={<FileText size={18} />}
+            value={missingEvidence}
+            label="Missing Evidence"
+            color="#475569"
+            onClick={() => router.push("/evidence")}
+          />
+          <MetricCard
+            icon={<BarChart3 size={18} />}
+            value={`${coverage}%`}
+            label="Evidence Coverage"
+            color="#15803d"
+            onClick={() => router.push("/reports")}
+          />
+        </div>
 
-        <CardShell 
-          title="Evidence Trail" 
-          count={`${evidence.length} Files`}
-          onRefresh={handleRefresh}
-          onMore={() => console.log("More options")}
-        >
-          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            {evidence.slice(0, 5).map((e, i) => (
-              <ListItem 
-                key={i} 
-                icon={<Paperclip size={16} />} 
-                iconBg="#e0f2fe" 
-                iconColor="#2563eb" 
-                title={e.fileName || `Evidence #${i + 1}`} 
-                subtitle={e.uploadedBy || "Unknown"} 
-                rightLabel={e.status || "Pending"} 
-                rightColor={e.status === "Verified" ? "#16a34a" : "#d97706"}
-                onClick={() => router.push(`/evidence/${e.id}`)}
-              />
-            ))}
-            {evidence.length === 0 && (
-              <EmptyState 
-                icon={<FolderOpen size={24} />} 
-                message="No evidence trail"
-              />
-            )}
-          </div>
-        </CardShell>
+        <div style={threeColGrid}>
+          <CardShell
+            title="High Risk Items"
+            count={`${highRisk} items`}
+            onRefresh={handleRefresh}
+            onMore={() => router.push("/transactions")}
+          >
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              {transactions.filter((t) => (t.riskScore ?? 0) >= 80).slice(0, 5).map((t) => (
+                <ListItem
+                  key={t.id}
+                  icon={<AlertOctagon size={16} />}
+                  iconBg="#fef2f2"
+                  iconColor="#dc2626"
+                  title={t.name || t.id}
+                  subtitle={`Risk score: ${t.riskScore ?? "N/A"}`}
+                  rightLabel="High Risk"
+                  rightColor="#dc2626"
+                  onClick={() => router.push("/transactions")}
+                />
+              ))}
+              {highRisk === 0 && (
+                <EmptyState
+                  icon={<CheckCircle2 size={24} style={{ color: "#16a34a" }} />}
+                  message="No high risk items"
+                />
+              )}
+            </div>
+          </CardShell>
 
-        <CardShell 
-          title="Audit Metrics"
-          onRefresh={handleRefresh}
-          onMore={() => console.log("More options")}
-        >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
-            <span style={{ fontSize: 13, color: "#64748b", fontWeight: 500 }}>Total Transactions</span>
-            <span style={{ fontSize: 20, fontWeight: 800, color: "#0f172a" }}>{transactions.length}</span>
-          </div>
-          <SegmentedBar segments={[
-            { value: transactions.length - highRisk - missingEvidence, color: "#3b82f6" },
-            { value: missingEvidence, color: "#475569" },
-            { value: highRisk, color: "#dc2626" },
-          ]} />
-          <CategoryRow dotColor="#3b82f6" label="Under Review" value={transactions.length - highRisk - missingEvidence} />
-          <CategoryRow dotColor="#475569" label="Missing Evidence" value={missingEvidence} />
-          <CategoryRow dotColor="#dc2626" label="High Risk" value={highRisk} />
-          <CategoryRow dotColor="#2563eb" label="Coverage" value={`${coverage}%`} />
-          <CategoryRow dotColor="#94a3b8" label="Flagged Issues" value={0} />
-        </CardShell>
-      </div>
+          <CardShell
+            title="Evidence Trail"
+            count={`${evidence.length} files`}
+            onRefresh={handleRefresh}
+            onMore={() => router.push("/evidence")}
+          >
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              {evidence.slice(0, 5).map((e) => (
+                <ListItem
+                  key={e.id}
+                  icon={<Paperclip size={16} />}
+                  iconBg="#f8fafc"
+                  iconColor="#475569"
+                  title={e.documentName || e.name || e.id}
+                  subtitle={e.category || "Document"}
+                  rightLabel={e.status || "Pending"}
+                  rightColor={e.status === "Verified" ? "#16a34a" : "#d97706"}
+                  onClick={() => router.push("/evidence")}
+                />
+              ))}
+              {evidence.length === 0 && (
+                <EmptyState
+                  icon={<FolderOpen size={24} />}
+                  message="No evidence trail"
+                />
+              )}
+            </div>
+          </CardShell>
 
-      <div style={twoColGrid}>
-        <CardShell 
-          title="Compliance Score"
-          onRefresh={handleRefresh}
-        >
-          <div style={{ fontSize: 48, fontWeight: 800, color: "#0f172a", letterSpacing: "-2px", marginBottom: 16 }}>
-            {coverage.toFixed(2)}%
-          </div>
-          <div style={{ height: 12, background: "#f1f5f9", borderRadius: 8, overflow: "hidden", marginBottom: 12 }}>
-            <div style={{ 
-              height: "100%", 
-              width: `${coverage}%`, 
-              background: `linear-gradient(90deg, ${COLOR} 0%, ${COLOR}cc 100%)`, 
-              borderRadius: 8,
-              transition: "width 0.8s ease"
-            }} />
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#94a3b8", fontWeight: 600 }}>
-            <span>0%</span><span>50%</span><span>100%</span>
-          </div>
-        </CardShell>
+          <CardShell
+            title="Audit Metrics"
+            onRefresh={handleRefresh}
+            onMore={() => router.push("/review-queue")}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
+              <span style={{ fontSize: 13, color: "#64748b", fontWeight: 500 }}>Open Issues</span>
+              <span style={{ fontSize: 18, fontWeight: 700, color: ACCENT }}>{flaggedIssues}</span>
+            </div>
+            <SegmentedBar segments={[
+              { value: transactions.length - highRisk - missingEvidence, color: "#16a34a" },
+              { value: missingEvidence, color: "#94a3b8" },
+              { value: highRisk, color: "#dc2626" },
+            ]} />
+            <CategoryRow dotColor="#16a34a" label="Clear" value={transactions.length - highRisk - missingEvidence} />
+            <CategoryRow dotColor="#94a3b8" label="Missing Evidence" value={missingEvidence} />
+            <CategoryRow dotColor="#dc2626" label="High Risk" value={highRisk} />
+            <CategoryRow dotColor="#64748b" label="Coverage" value={`${coverage}%`} />
+            <CategoryRow dotColor="#cbd5e1" label="Open Flags" value={flaggedIssues} />
+          </CardShell>
+        </div>
 
-        <CardShell 
-          title="Audit Trail"
-          onRefresh={handleRefresh}
-        >
-          <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height: 120, padding: "12px 0" }}>
-            {Array.from({ length: 14 }).map((_, i) => {
-              const h = 20 + Math.random() * 70;
-              return (
-                <div 
-                  key={i} 
-                  style={{ 
-                    flex: 1, 
-                    background: `linear-gradient(180deg, ${COLOR} 0%, ${COLOR}88 100%)`, 
-                    borderRadius: "6px 6px 0 0", 
-                    height: `${h}%`, 
-                    minHeight: 8,
-                    transition: "all 0.3s ease",
-                    cursor: "pointer"
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = "scaleY(1.05)";
-                    e.currentTarget.style.opacity = "0.8";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = "scaleY(1)";
-                    e.currentTarget.style.opacity = "1";
+        <div style={twoColGrid}>
+          <CardShell title="Compliance Score" onRefresh={handleRefresh}>
+            <div style={{ fontSize: 40, fontWeight: 700, color: ACCENT, letterSpacing: "-1px", marginBottom: 16 }}>
+              {coverage}%
+            </div>
+            <div style={{ height: 8, background: "#f1f5f9", borderRadius: 6, overflow: "hidden", marginBottom: 12 }}>
+              <div style={{ height: "100%", width: `${coverage}%`, background: ACCENT, borderRadius: 6 }} />
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#94a3b8", fontWeight: 600 }}>
+              <span>0%</span><span>50%</span><span>100%</span>
+            </div>
+          </CardShell>
+
+          <CardShell title="Review Activity" onRefresh={handleRefresh}>
+            <div style={{ display: "flex", alignItems: "flex-end", gap: 6, height: 100, padding: "8px 0" }}>
+              {auditActivity.map((h, i) => (
+                <div
+                  key={i}
+                  style={{
+                    flex: 1,
+                    background: i === auditActivity.length - 1 ? CHART_BAR_ACTIVE : CHART_BAR,
+                    borderRadius: "4px 4px 0 0",
+                    height: `${h}%`,
+                    minHeight: 6,
                   }}
                 />
-              );
-            })}
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#94a3b8", marginTop: 8 }}>
-            <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span>
-          </div>
-        </CardShell>
-      </div>
-
-      {isLoading && (
-        <div style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: "rgba(255,255,255,0.8)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          zIndex: 1000
-        }}>
-          <Loader2 size={48} style={{ color: COLOR, animation: "spin 1s linear infinite" }} />
+              ))}
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#94a3b8", marginTop: 8 }}>
+              <span>Jan</span><span>Mar</span><span>May</span><span>Jul</span>
+            </div>
+          </CardShell>
         </div>
-      )}
+
+        {isLoading && (
+          <div style={loadingOverlay}>
+            <Loader2 size={40} style={{ color: ACCENT, animation: "spin 1s linear infinite" }} />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -1156,7 +1007,7 @@ export default function DashboardPage() {
         flexDirection: "column",
         gap: 16
       }}>
-        <Loader2 size={48} style={{ color: "#2563eb", animation: "spin 1s linear infinite" }} />
+        <Loader2 size={40} style={{ color: ACCENT, animation: "spin 1s linear infinite" }} />
         <p style={{ color: "#64748b", fontSize: 14, fontWeight: 500 }}>Loading dashboard…</p>
       </div>
     );
@@ -1172,94 +1023,125 @@ export default function DashboardPage() {
    ══════════════════════════════════════════════════════════ */
 const pageBg: React.CSSProperties = {
   minHeight: "100vh",
-  background: "#f8fafc",
+  background: "#f1f5f9",
   fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
 };
 
-const yearBtn: React.CSSProperties = {
-  padding: "10px 18px",
-  borderRadius: 12,
-  border: "1px solid rgba(255,255,255,0.3)",
-  background: "rgba(255,255,255,0.15)",
-  color: "#fff",
+const dashboardShell: React.CSSProperties = {
+  maxWidth: 1400,
+  margin: "0 auto",
+  padding: "28px 28px 40px",
+  display: "flex",
+  flexDirection: "column",
+  gap: 24,
+};
+
+const dashboardHeader: React.CSSProperties = {
+  display: "flex",
+  alignItems: "flex-start",
+  justifyContent: "space-between",
+  gap: 20,
+  flexWrap: "wrap",
+  background: "#fff",
+  border: "1px solid #e2e8f0",
+  borderRadius: 14,
+  padding: "22px 24px",
+};
+
+const headerEyebrow: React.CSSProperties = {
+  margin: 0,
+  fontSize: 13,
+  color: "#64748b",
+  fontWeight: 500,
+};
+
+const headerTitle: React.CSSProperties = {
+  margin: "4px 0 0",
+  fontSize: 24,
+  fontWeight: 700,
+  color: ACCENT,
+  letterSpacing: "-0.4px",
+};
+
+const headerMeta: React.CSSProperties = {
+  margin: "6px 0 0",
+  fontSize: 13,
+  color: "#64748b",
+};
+
+const headerDate: React.CSSProperties = {
+  margin: "4px 0 0",
+  fontSize: 12,
+  color: "#94a3b8",
+};
+
+const headerActionBtn: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 8,
+  padding: "9px 16px",
+  borderRadius: 10,
+  border: "1px solid #e2e8f0",
+  background: "#fff",
+  color: ACCENT,
   fontSize: 13,
   fontWeight: 600,
   cursor: "pointer",
   fontFamily: "inherit",
-  backdropFilter: "blur(10px)",
-  display: "flex",
-  alignItems: "center",
-  transition: "all 0.2s ease",
 };
 
-const exportBtn: React.CSSProperties = {
-  padding: "10px 20px",
-  borderRadius: 12,
-  border: "none",
-  background: "#fff",
-  color: "#0f172a",
-  fontSize: 13,
-  fontWeight: 700,
-  cursor: "pointer",
-  fontFamily: "inherit",
-  boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+const loadingOverlay: React.CSSProperties = {
+  position: "fixed",
+  inset: 0,
+  background: "rgba(255,255,255,0.85)",
   display: "flex",
   alignItems: "center",
-  transition: "all 0.2s ease",
+  justifyContent: "center",
+  zIndex: 1000,
 };
 
 const iconButton: React.CSSProperties = {
   width: 32,
   height: 32,
   borderRadius: 8,
-  border: "none",
-  background: "transparent",
+  border: "1px solid #e2e8f0",
+  background: "#fff",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
   cursor: "pointer",
-  transition: "all 0.2s ease",
 };
 
 const metricsRow: React.CSSProperties = {
   display: "grid",
-  gridTemplateColumns: "repeat(5, 1fr)",
-  gap: 20,
-  padding: "0 32px",
-  marginTop: -24,
-  marginBottom: 24,
+  gridTemplateColumns: "repeat(4, 1fr)",
+  gap: 16,
 };
 
 const metricCard: React.CSSProperties = {
   background: "#fff",
-  borderRadius: 16,
-  padding: 24,
-  boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.04)",
+  borderRadius: 14,
+  padding: 20,
   border: "1px solid #e2e8f0",
-  position: "relative",
-  transition: "all 0.3s ease",
+  transition: "border-color 0.2s ease, box-shadow 0.2s ease",
 };
 
 const threeColGrid: React.CSSProperties = {
   display: "grid",
   gridTemplateColumns: "repeat(3, 1fr)",
-  gap: 20,
-  padding: "0 32px",
-  marginBottom: 20,
+  gap: 16,
 };
 
 const twoColGrid: React.CSSProperties = {
   display: "grid",
   gridTemplateColumns: "repeat(2, 1fr)",
-  gap: 20,
-  padding: "0 32px 32px",
+  gap: 16,
 };
 
 const cardShell: React.CSSProperties = {
   background: "#fff",
-  borderRadius: 16,
-  padding: 24,
-  boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.04)",
+  borderRadius: 14,
+  padding: 22,
   border: "1px solid #e2e8f0",
 };
 
@@ -1267,10 +1149,10 @@ const listItemRow: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
-  padding: "12px 14px",
-  borderRadius: 12,
+  padding: "10px 12px",
+  borderRadius: 10,
   gap: 12,
-  transition: "all 0.2s ease",
+  transition: "background 0.15s ease",
 };
 
 /* ══════════════════════════════════════════════════════════
