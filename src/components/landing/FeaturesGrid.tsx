@@ -1,12 +1,29 @@
 "use client";
 
-const FEATURES = [
-  { emoji: "💳", title: "Transaction Monitoring",   text: "Track every financial movement in real time with risk scoring, duplicate detection, and approval workflow tracking.",   color: "#eff6ff", border: "#bfdbfe" },
-  { emoji: "📁", title: "Evidence Management",      text: "Link invoices, receipts, bank statements, and approval memos directly to transactions with structured folder categories.", color: "#f0fdf4", border: "#bbf7d0" },
-  { emoji: "🚨", title: "AI Fraud Detection",       text: "Automatic flagging of round numbers, after-hours postings, duplicate amounts, and split-payment patterns.",            color: "#fff7ed", border: "#fed7aa" },
-  { emoji: "🔔", title: "Review Queue",             text: "Auditors flag issues with severity levels; accountants resolve with notes and evidence — all in a tracked workflow.",   color: "#fdf4ff", border: "#e9d5ff" },
-  { emoji: "📈", title: "Audit Readiness Score",    text: "Live compliance scoring with evidence coverage percentage, missing docs heatmap, and exportable PDF/CSV reports.",     color: "#f0f9ff", border: "#bae6fd" },
-  { emoji: "⚙️",  title: "Role-Based Access Control", text: "Admins, Accountants, and Auditors each see only what they need — enforced at both UI and API level.",               color: "#fefce8", border: "#fde68a" },
+import {
+  AlertTriangle,
+  Bell,
+  CreditCard,
+  FolderOpen,
+  Settings,
+  TrendingUp,
+  type LucideIcon,
+} from "lucide-react";
+
+const FEATURES: {
+  icon: LucideIcon;
+  iconColor: string;
+  title: string;
+  text: string;
+  color: string;
+  border: string;
+}[] = [
+  { icon: CreditCard, iconColor: "#1d4ed8", title: "Transaction Monitoring",   text: "Track every financial movement in real time with risk scoring, duplicate detection, and approval workflow tracking.",   color: "#eff6ff", border: "#bfdbfe" },
+  { icon: FolderOpen, iconColor: "#15803d", title: "Evidence Management",      text: "Link invoices, receipts, bank statements, and approval memos directly to transactions with structured folder categories.", color: "#f0fdf4", border: "#bbf7d0" },
+  { icon: AlertTriangle, iconColor: "#c2410c", title: "AI Fraud Detection",       text: "Automatic flagging of round numbers, after-hours postings, duplicate amounts, and split-payment patterns.",            color: "#fff7ed", border: "#fed7aa" },
+  { icon: Bell, iconColor: "#7e22ce", title: "Review Queue",             text: "Auditors flag issues with severity levels; accountants resolve with notes and evidence — all in a tracked workflow.",   color: "#fdf4ff", border: "#e9d5ff" },
+  { icon: TrendingUp, iconColor: "#0369a1", title: "Audit Readiness Score",    text: "Live compliance scoring with evidence coverage percentage, missing docs heatmap, and exportable PDF/CSV reports.",     color: "#f0f9ff", border: "#bae6fd" },
+  { icon: Settings, iconColor: "#a16207", title: "Role-Based Access Control", text: "Admins, Accountants, and Auditors each see only what they need — enforced at both UI and API level.",               color: "#fefce8", border: "#fde68a" },
 ];
 
 export default function FeaturesGrid() {
@@ -20,18 +37,21 @@ export default function FeaturesGrid() {
         </div>
 
         <div style={s.grid}>
-          {FEATURES.map((f) => (
+          {FEATURES.map((f) => {
+            const Icon = f.icon;
+            return (
             <div key={f.title} style={s.card}
               onMouseEnter={(e) => Object.assign(e.currentTarget.style, { transform: "translateY(-4px)", boxShadow: "0 16px 48px rgba(15,23,42,0.10)" })}
               onMouseLeave={(e) => Object.assign(e.currentTarget.style, { transform: "translateY(0)", boxShadow: "0 2px 8px rgba(15,23,42,0.05)" })}
             >
               <div style={{ ...s.iconBox, background: f.color, border: `1px solid ${f.border}` }}>
-                <span style={{ fontSize: 22 }}>{f.emoji}</span>
+                <Icon size={22} color={f.iconColor} strokeWidth={1.75} />
               </div>
               <h3 style={s.cardTitle}>{f.title}</h3>
               <p style={s.cardText}>{f.text}</p>
             </div>
-          ))}
+          );
+          })}
         </div>
       </div>
     </section>

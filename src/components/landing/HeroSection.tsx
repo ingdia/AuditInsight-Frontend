@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Shield, TrendingUp, AlertTriangle, CheckCircle, ArrowRight } from "lucide-react";
+import { Shield, TrendingUp, AlertTriangle, CheckCircle, ArrowRight, Lock } from "lucide-react";
 
 export default function HeroSection() {
   return (
@@ -110,7 +110,7 @@ export default function HeroSection() {
 
           {/* Floating badge */}
           <div style={s.floatBadge}>
-            <span style={{ fontSize: 18 }}>🔒</span>
+            <div style={s.floatBadgeIcon}><Lock size={18} color="#1e3a8a" strokeWidth={1.75} /></div>
             <div>
               <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: "#0f172a" }}>SOC 2 Ready</p>
               <p style={{ margin: 0, fontSize: 11, color: "#64748b" }}>Enterprise security</p>
@@ -247,5 +247,11 @@ const s: Record<string, React.CSSProperties> = {
     display: "flex", alignItems: "center", gap: 10,
     boxShadow: "0 8px 32px rgba(15,23,42,0.12)",
     border: "1px solid #e2e8f0",
+  },
+  floatBadgeIcon: {
+    width: 34, height: 34, borderRadius: 10,
+    background: "#eff6ff", border: "1px solid #bfdbfe",
+    display: "flex", alignItems: "center", justifyContent: "center",
+    flexShrink: 0,
   },
 };

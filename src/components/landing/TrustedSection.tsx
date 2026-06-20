@@ -1,12 +1,22 @@
 "use client";
 
-const TAGS = [
-  { emoji: "🏦", label: "Internal Audit Teams"       },
-  { emoji: "💼", label: "Finance Departments"        },
-  { emoji: "⚖️",  label: "Compliance Officers"       },
-  { emoji: "🔍", label: "External Auditors"          },
-  { emoji: "🏢", label: "Enterprise Review Teams"    },
-  { emoji: "📊", label: "CFO Offices"                },
+import {
+  BarChart3,
+  Briefcase,
+  Building2,
+  Landmark,
+  Scale,
+  Search,
+  type LucideIcon,
+} from "lucide-react";
+
+const TAGS: { icon: LucideIcon; label: string }[] = [
+  { icon: Landmark, label: "Internal Audit Teams"       },
+  { icon: Briefcase, label: "Finance Departments"        },
+  { icon: Scale, label: "Compliance Officers"       },
+  { icon: Search, label: "External Auditors"          },
+  { icon: Building2, label: "Enterprise Review Teams"    },
+  { icon: BarChart3, label: "CFO Offices"                },
 ];
 
 export default function TrustedSection() {
@@ -14,15 +24,18 @@ export default function TrustedSection() {
     <section style={s.section}>
       <p style={s.label}>Trusted by modern finance & audit teams worldwide</p>
       <div style={s.strip}>
-        {TAGS.map((t, i) => (
+        {TAGS.map((t, i) => {
+          const Icon = t.icon;
+          return (
           <div key={t.label} style={{ display: "flex", alignItems: "center", gap: 0 }}>
             <div style={s.tag}>
-              <span style={{ fontSize: 18 }}>{t.emoji}</span>
+              <Icon size={16} color="#64748b" strokeWidth={1.75} />
               <span style={s.tagText}>{t.label}</span>
             </div>
             {i < TAGS.length - 1 && <div style={s.divider} />}
           </div>
-        ))}
+        );
+        })}
       </div>
     </section>
   );
