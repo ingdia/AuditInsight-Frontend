@@ -1,12 +1,23 @@
 "use client";
 
-const ITEMS = [
-  { emoji: "🔐", title: "Role-Based Access",     desc: "CLIENT, MEMBER, AUDITOR, and ADMIN roles with strict UI and API enforcement." },
-  { emoji: "📋", title: "Immutable Audit Trail",  desc: "Every login, transaction, flag, and resolution is permanently logged — no edits, no deletes." },
-  { emoji: "🔑", title: "Secure Invitations",     desc: "Cryptographically signed invite tokens with 7-day expiry and forced password reset on first login." },
-  { emoji: "🏢", title: "Multi-Tenant Isolation", desc: "Strict organisation data isolation — no user can view another tenant's financial data." },
-  { emoji: "🚫", title: "API-Level Guards",        desc: "All write endpoints return 403 Forbidden for AUDITOR and CLIENT roles even if UI is bypassed." },
-  { emoji: "📧", title: "Automated Notifications", desc: "Instant email alerts for invites, flagged issues, and resolutions — keeping every party informed." },
+import {
+  Building2,
+  Check,
+  ClipboardList,
+  Key,
+  Lock,
+  Mail,
+  ShieldOff,
+  type LucideIcon,
+} from "lucide-react";
+
+const ITEMS: { icon: LucideIcon; title: string; desc: string }[] = [
+  { icon: Lock, title: "Role-Based Access",     desc: "CLIENT, MEMBER, AUDITOR, and ADMIN roles with strict UI and API enforcement." },
+  { icon: ClipboardList, title: "Immutable Audit Trail",  desc: "Every login, transaction, flag, and resolution is permanently logged — no edits, no deletes." },
+  { icon: Key, title: "Secure Invitations",     desc: "Cryptographically signed invite tokens with 7-day expiry and forced password reset on first login." },
+  { icon: Building2, title: "Multi-Tenant Isolation", desc: "Strict organisation data isolation — no user can view another tenant's financial data." },
+  { icon: ShieldOff, title: "API-Level Guards",        desc: "All write endpoints return 403 Forbidden for AUDITOR and CLIENT roles even if UI is bypassed." },
+  { icon: Mail, title: "Automated Notifications", desc: "Instant email alerts for invites, flagged issues, and resolutions — keeping every party informed." },
 ];
 
 const BADGES = ["SOC 2 Ready", "GDPR Compliant", "ISO 27001 Aligned", "AES-256 Encryption", "Zero Trust Architecture"];
@@ -23,19 +34,22 @@ export default function SecuritySection() {
 
             <div style={s.badges}>
               {BADGES.map((b) => (
-                <span key={b} style={s.badge}>✓ {b}</span>
+                <span key={b} style={s.badge}><Check size={12} strokeWidth={3} style={{ flexShrink: 0 }} /> {b}</span>
               ))}
             </div>
           </div>
 
           <div style={s.grid}>
-            {ITEMS.map((item) => (
+            {ITEMS.map((item) => {
+              const Icon = item.icon;
+              return (
               <div key={item.title} style={s.card}>
-                <div style={s.iconWrap}><span style={{ fontSize: 22 }}>{item.emoji}</span></div>
+                <div style={s.iconWrap}><Icon size={20} color="#93c5fd" strokeWidth={1.75} /></div>
                 <h3 style={s.cardTitle}>{item.title}</h3>
                 <p style={s.cardDesc}>{item.desc}</p>
               </div>
-            ))}
+            );
+            })}
           </div>
         </div>
       </div>
@@ -57,6 +71,7 @@ const s: Record<string, React.CSSProperties> = {
   sub: { margin: "0 0 24px", fontSize: 16, color: "rgba(255,255,255,0.60)", lineHeight: 1.6 },
   badges: { display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 10 },
   badge: {
+    display: "inline-flex", alignItems: "center", gap: 6,
     fontSize: 12, fontWeight: 600,
     color: "#93c5fd", background: "rgba(59,130,246,0.12)",
     border: "1px solid rgba(59,130,246,0.25)",

@@ -1,12 +1,22 @@
 "use client";
 
-const STEPS = [
-  { n: "01", emoji: "📥", title: "Accountant Logs Transactions", desc: "Daily financial entries are added with chart of accounts, amounts, and payment methods." },
-  { n: "02", emoji: "📎", title: "Evidence is Uploaded",         desc: "Invoices, receipts, and contracts are linked directly to each transaction." },
-  { n: "03", emoji: "🤖", title: "AI Risk Engine Runs",          desc: "The system auto-flags duplicates, round numbers, after-hours activity, and missing docs." },
-  { n: "04", emoji: "🔍", title: "Auditor Reviews & Flags",      desc: "Auditors inspect the trail, raise issues with severity levels, and notify accountants." },
-  { n: "05", emoji: "✅", title: "Accountant Resolves Issues",   desc: "Accountants upload corrections and notes, clearing the review queue." },
-  { n: "06", emoji: "📊", title: "Reports Exported",            desc: "PDF/CSV compliance packages are generated for executives and external auditors." },
+import {
+  BarChart3,
+  CheckCircle,
+  Paperclip,
+  Search,
+  Sparkles,
+  Wallet,
+  type LucideIcon,
+} from "lucide-react";
+
+const STEPS: { n: string; icon: LucideIcon; title: string; desc: string }[] = [
+  { n: "01", icon: Wallet, title: "Accountant Logs Transactions", desc: "Daily financial entries are added with chart of accounts, amounts, and payment methods." },
+  { n: "02", icon: Paperclip, title: "Evidence is Uploaded",         desc: "Invoices, receipts, and contracts are linked directly to each transaction." },
+  { n: "03", icon: Sparkles, title: "AI Risk Engine Runs",          desc: "The system auto-flags duplicates, round numbers, after-hours activity, and missing docs." },
+  { n: "04", icon: Search, title: "Auditor Reviews & Flags",      desc: "Auditors inspect the trail, raise issues with severity levels, and notify accountants." },
+  { n: "05", icon: CheckCircle, title: "Accountant Resolves Issues",   desc: "Accountants upload corrections and notes, clearing the review queue." },
+  { n: "06", icon: BarChart3, title: "Reports Exported",            desc: "PDF/CSV compliance packages are generated for executives and external auditors." },
 ];
 
 export default function HowItWorks() {
@@ -19,17 +29,20 @@ export default function HowItWorks() {
         </div>
 
         <div style={s.grid}>
-          {STEPS.map((step, i) => (
+          {STEPS.map((step, i) => {
+            const Icon = step.icon;
+            return (
             <div key={step.n} style={s.card}>
               <div style={s.top}>
                 <span style={s.num}>{step.n}</span>
-                <span style={{ fontSize: 28 }}>{step.emoji}</span>
+                <div style={s.iconWrap}><Icon size={22} color="#1e3a8a" strokeWidth={1.75} /></div>
               </div>
               <h3 style={s.cardTitle}>{step.title}</h3>
               <p style={s.cardDesc}>{step.desc}</p>
               {i < STEPS.length - 1 && <div style={s.connector} />}
             </div>
-          ))}
+          );
+          })}
         </div>
       </div>
     </section>
@@ -51,6 +64,11 @@ const s: Record<string, React.CSSProperties> = {
   },
   top: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 },
   num: { fontSize: 13, fontWeight: 800, color: "#1e3a8a", letterSpacing: "0.05em" },
+  iconWrap: {
+    width: 40, height: 40, borderRadius: 12,
+    background: "#fff", border: "1px solid #dbeafe",
+    display: "flex", alignItems: "center", justifyContent: "center",
+  },
   cardTitle: { margin: "0 0 8px", fontSize: 15, fontWeight: 700, color: "#0f172a" },
   cardDesc: { margin: 0, fontSize: 13, color: "#64748b", lineHeight: 1.65 },
   connector: {
