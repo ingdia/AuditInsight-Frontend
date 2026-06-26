@@ -3,7 +3,6 @@ import { UserRole } from "@/types/user";
 
 // ─── Permission matrix per role ────────────────────────────────────
 const PERMISSIONS: Record<UserRole, Permissions> = {
-  // CEO / Organisation Owner — read-only on financials, full team admin
   CLIENT: {
     canViewTransactions: true,
     canAddTransaction: false,
@@ -16,8 +15,8 @@ const PERMISSIONS: Record<UserRole, Permissions> = {
     canFlagIssue: false,
     canResolveIssue: false,
     canApproveTransaction: true,
-    canViewReports: true,
     canViewAuditLogs: true,
+    canViewSettings: true,
     canManageOrganisation: true,
     canInviteMembers: true,
     canSuspendMembers: true,
@@ -36,8 +35,8 @@ const PERMISSIONS: Record<UserRole, Permissions> = {
     canFlagIssue: false,
     canResolveIssue: true,
     canApproveTransaction: false,
-    canViewReports: true,
     canViewAuditLogs: false,
+    canViewSettings: true,
     canManageOrganisation: false,
     canInviteMembers: false,
     canSuspendMembers: false,
@@ -56,8 +55,8 @@ const PERMISSIONS: Record<UserRole, Permissions> = {
     canFlagIssue: true,
     canResolveIssue: false,
     canApproveTransaction: false,
-    canViewReports: true,
     canViewAuditLogs: true,
+    canViewSettings: true,
     canManageOrganisation: false,
     canInviteMembers: false,
     canSuspendMembers: false,
@@ -76,8 +75,8 @@ const PERMISSIONS: Record<UserRole, Permissions> = {
     canFlagIssue: false,
     canResolveIssue: false,
     canApproveTransaction: false,
-    canViewReports: false,
     canViewAuditLogs: false,
+    canViewSettings: true,
     canManageOrganisation: false,
     canInviteMembers: false,
     canSuspendMembers: false,
@@ -85,7 +84,6 @@ const PERMISSIONS: Record<UserRole, Permissions> = {
   },
 };
 
-// ─── Permissions type ──────────────────────────────────────────────
 export interface Permissions {
   canViewTransactions: boolean;
   canAddTransaction: boolean;
@@ -98,15 +96,14 @@ export interface Permissions {
   canFlagIssue: boolean;
   canResolveIssue: boolean;
   canApproveTransaction: boolean;
-  canViewReports: boolean;
   canViewAuditLogs: boolean;
+  canViewSettings: boolean;
   canManageOrganisation: boolean;
   canInviteMembers: boolean;
   canSuspendMembers: boolean;
   canViewAdminPanel: boolean;
 }
 
-// ─── Hook ──────────────────────────────────────────────────────────
 export function usePermissions(): Permissions {
   const { role } = useAuth();
   return PERMISSIONS[role ?? "CLIENT"];

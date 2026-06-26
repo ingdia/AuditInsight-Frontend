@@ -1,40 +1,20 @@
+// ── Evidence — must always be linked to exactly one transaction ────
 export interface Evidence {
-  id: string | number;
+  id: string;
   organisationId?: string;
-  transactionId?: string | number;
-  linkedTransactionIds?: (string | number)[];  // many-to-many
-  documentName?: string;
-  folder?: string;
-  subfolder?: string;
-  fileUpload?: string;
-  fileType?: string;
+  // Required — evidence MUST be linked to a transaction
+  transactionId: string;
+  documentName: string;
+  folder: string;
+  subfolder: string;
+  fileUpload: string;         // URL (Cloudinary or mock)
+  fileType: string;           // pdf | xlsx | png | jpg
   uploadedBy?: string | number;
   uploadedAt?: string;
   notes?: string;
-  version?: number;              // version control — increments on re-upload
-  previousVersions?: {           // keeps history of all uploads
-    fileUpload: string;
-    uploadedAt: string;
-    uploadedBy: string | number;
-    version: number;
-  }[];
-  checklistItem?: string;        // e.g. "Receipt", "Boarding Pass", "Invoice"
-  checklistRequired?: boolean;
+  status?: "Pending" | "Verified";
 
-  // Legacy
-  name?: string;
-  category?: string;
-  subCategory?: string;
-  type?: string;
-  url?: string;
-  date?: string;
-  status?: "Pending" | "Verified" | "Missing";
+  // Inherited from the linked transaction (denormalised for display)
   amount?: number;
-  counterpartyName?: string;
-  fileObject?: File;
-}
-
-export interface EvidenceChecklist {
-  transactionCategory: string;   // e.g. "Travel Expense"
-  requiredItems: string[];        // ["Receipt", "Boarding Pass"]
+  counterparty?: string;
 }

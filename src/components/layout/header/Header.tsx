@@ -3,7 +3,7 @@
 import { useState } from "react";
 import {
   LayoutDashboard, ArrowLeftRight, FileCheck, ClipboardList,
-  BarChart3, Settings, LogOut, Building2, UserCheck, Bell, Shield,
+  Settings, LogOut, Building2, UserCheck, Bell, Shield,
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import { usePermissions } from "@/security/access-control";
@@ -22,12 +22,12 @@ const ROLE_LABEL: Record<UserRole, string> = {
   ADMIN:   "Super Admin",
 };
 
+// Reports removed — system focuses on Transactions & Evidence only
 const STANDARD_NAV = [
   { label: "Dashboard",    icon: LayoutDashboard, path: "/dashboard"    },
   { label: "Transactions", icon: ArrowLeftRight,  path: "/transactions" },
   { label: "Evidence",     icon: FileCheck,       path: "/evidence"     },
   { label: "Review Queue", icon: ClipboardList,   path: "/review-queue" },
-  { label: "Reports",      icon: BarChart3,       path: "/reports"      },
   { label: "Settings",     icon: Settings,        path: "/settings"     },
 ];
 
@@ -40,7 +40,7 @@ const ADMIN_NAV = [
 export default function Header({ title }: HeaderProps) {
   const router   = useRouter();
   const pathname = usePathname();
-  const { canManageOrganisation, canViewAdminPanel } = usePermissions();
+  const { canViewSettings, canViewAdminPanel } = usePermissions();
   const { logout, user, role, loading } = useAuth();
   const { unreadCount } = useNotifications();
   const [notifOpen, setNotifOpen] = useState(false);
@@ -49,7 +49,7 @@ export default function Header({ title }: HeaderProps) {
 
   const navItems = canViewAdminPanel
     ? ADMIN_NAV
-    : STANDARD_NAV.filter((item) => !(item.path === "/settings" && !canManageOrganisation));
+    : STANDARD_NAV.filter((item) => !(item.path === "/settings" && !canViewSettings));
 
   const currentRole = (role ?? "CLIENT") as UserRole;
 
